@@ -12,14 +12,16 @@ typedef struct LexemeInNode {
 } Lexeme;
 
 typedef struct GrammarTreeNode {
-	Node* parent; /* Pointer pointing to the parent node of this node */
-	Node* child; /* Pointer pointing to the first child of this node */
-	Node* sibling; /* Pointer pointing to the sibling of this node */
+	struct GrammarTreeNode *parent; /* Pointer pointing to the parent node of this node */
+	struct GrammarTreeNode *child; /* Pointer pointing to the first child of this node */
+	struct GrammarTreeNode *sibling; /* Pointer pointing to the sibling of this node */
 	Lexeme lexeme;
 } Node;
 
-Node* initNode(char* type, char* value, int linenum);
+Node* initNode(char *type, char *value, int linenum);
 
-void addChild(Node* parent, Node* child);
+void addChild(Node *parent, Node *child);
 
-void printTree(Node* root);
+void printTree(Node *root);
+
+void destroyTree(Node *root);
