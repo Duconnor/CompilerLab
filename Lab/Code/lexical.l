@@ -56,8 +56,8 @@ WHILE while
 	/*{SCIFLOAT} { printf("SCI: %s\n", yytext); }*/
 {FLOAT} { return FLOAT; }
 {INT} { return INT; }
-{OCT} { return FLOAT; }
-{HEX} { return FLOAT; }
+{OCT} { return INT; }
+{HEX} { return INT; }
 {ID} { return ID; }
 {SEMI} { return SEMI; }
 {COMMA} { return COMMA; }
