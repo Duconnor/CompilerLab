@@ -1,3 +1,12 @@
+%option yylineno
+%{
+	int yycolumn = 1;
+	#define YY_USER_ACTION \
+	yylloc.first_line = yylloc.last_line = yylineno; \
+	yylloc.first_column = yycolumn; \
+	yylloc.last_column = yycolumn + yyleng - 1; \
+	yycolumn += yyleng;
+%}
 digit [0-9]
 posdigit [1-9]
 octdigit [0-7]
@@ -36,35 +45,35 @@ ELSE else
 WHILE while
 	/* [{letter}] is not acceptable, why? */
 %%
-\n {}
-{STRUCT} { printf("STRUCT: %s\n", yytext); }
-{RETURN} { printf("RETURN: %s\n", yytext); }
-{IF} { printf("IF: %s\n", yytext); }
-{ELSE} { printf("ELSE: %s\n", yytext); }
-{WHILE} { printf("WHILE: %s\n", yytext); }
-{TYPE} { printf("TYPE: %s\n", yytext); }
-{SCIFLOAT} { printf("SCI: %s\n", yytext); }
-{FLOAT} { printf("FLOAT: %s\n", yytext); }
-{INT} { printf("INT: %s\n", yytext); }
-{OCT} { printf("OCT: %s\n", yytext);}
-{HEX} { printf("HEX: %s\n", yytext); }
-{ID} { printf("ID: %s\n", yytext); }
-{SEMI} { printf("SEMI: %s\n", yytext); }
-{COMMA} { printf("COMMA: %s\n", yytext); }
-{ASSIGNOP} { printf("ASSIGNOP: %s\n", yytext); }
-{RELOP} { printf("RELOP: %s\n", yytext); }
-{PLUS} { printf("PLUS: %s\n", yytext); }
-{MINUS} { printf("MINUS: %s\n", yytext); }
-{STAR} { printf("STAR: %s\n", yytext); }
-{DIV} { printf("DIV: %s\n", yytext); }
-{AND} { printf("AND: %s\n", yytext); }
-{OR} { printf("OR: %s\n", yytext); }
-{NOT} { printf("NOT: %s\n", yytext); }
-{LP} { printf("LP: %s\n", yytext); }
-{RP} { printf("RP: %s\n", yytext); }
-{LB} { printf("LB: %s\n", yytext); }
-{RB} { printf("RB: %s\n", yytext); }
-{LC} { printf("LC: %s\n", yytext); }
-{RC} { printf("RC: %s\n", yytext); }
+\n { yycolumn = 1; }
+{STRUCT} { return STRUCT; }
+{RETURN} { return RETURN; }
+{IF} { return IF; }
+{ELSE} { return ELSE; }
+{WHILE} { return WHILE; }
+{TYPE} { return TYPE; }
+	/*{SCIFLOAT} { printf("SCI: %s\n", yytext); }*/
+{FLOAT} { return FLOAT; }
+{INT} { return INT; }
+{OCT} { return OCT; }
+{HEX} { return HEX; }
+{ID} { return ID; }
+{SEMI} { return SEMI; }
+{COMMA} { return COMMA; }
+{ASSIGNOP} { return ASSIGNOP; }
+{RELOP} { return RELOP; }
+{PLUS} { return PLUS; }
+{MINUS} { return MINUS; }
+{STAR} { return STAR; }
+{DIV} { return DIV; }
+{AND} { return AND; }
+{OR} { return OR; }
+{NOT} { return NOT; }
+{LP} { return LP; }
+{RP} { return RP; }
+{LB} { return LB; }
+{RB} { return RB; }
+{LC} { return LC; }
+{RC} { return RC; }
 %%
 
