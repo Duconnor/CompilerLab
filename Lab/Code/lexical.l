@@ -47,9 +47,11 @@ RETURN return
 IF if
 ELSE else
 WHILE while
+SPACE [ \t]
 	/* [{letter}] is not acceptable, why? */
 %%
 \n { yycolumn = 1; }
+{SPACE} {}
 {STRUCT} { yylval.type_node = initNode("STRUCT", NULL, yylineno); return STRUCT; }
 {RETURN} { yylval.type_node = initNode("RETURN", NULL, yylineno); return RETURN; }
 {IF} { yylval.type_node = initNode("IF", NULL, yylineno); return IF; }
@@ -86,5 +88,6 @@ WHILE while
 {RB} { yylval.type_node = initNode("RB", NULL, yylineno); return RB; }
 {LC} { yylval.type_node = initNode("LC", NULL, yylineno); return LC; }
 {RC} { yylval.type_node = initNode("RC", NULL, yylineno); return RC; }
+. { printf("Error type A at Line %d: Mysterious character \"%s\"\n", yylineno, yytext); }
 %%
 
