@@ -4,7 +4,7 @@
     #include <stdlib.h>
     #include "tree.h"
     #include "lex.yy.c"
-    extern Node* GrammarTree;
+    extern Node* tree;
 %}
 
 /* declared types */
@@ -35,95 +35,343 @@
 
 %%
 /* High-level Definitions */
-Program : ExtDefList {}
+Program : ExtDefList {
+        $$ = initNode("Program", " ", @$.first_line);
+        addChild($$, $1);
+        tree = $$;
+    }
     ;
-ExtDefList : ExtDef ExtDefList {}
-    | /* empty */ {}
+ExtDefList : ExtDef ExtDefList {
+        $$ = initNode("ExtDecList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | /* empty */ { $$ = NULL; }
     ;
-ExtDef : Specifier ExtDecList SEMI {}
-    | Specifier SEMI {}
-    | Specifier FunDec CompSt {}
+ExtDef : Specifier ExtDecList SEMI {
+        $$ = initNode("ExtDef", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Specifier SEMI {
+        $$ = initNode("ExtDef", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | Specifier FunDec CompSt {
+        $$ = initNode("ExtDef", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-ExtDecList : VarDec {}
-    | VarDec COMMA ExtDecList {}
+ExtDecList : VarDec {
+        $$ = initNode("ExtDecList", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | VarDec COMMA ExtDecList {
+        $$ = initNode("ExtDecList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
 
 /* Specifiers */
-Specifier : TYPE {}
-    | StructSpecifier {}
+Specifier : TYPE {
+        $$ = initNode("Specifier", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | StructSpecifier {
+        $$ = initNode("Specifier", " ", @$.first_line);
+        addChild($$, $1);
+    }
     ;
-StructSpecifier : STRUCT OptTag LC DefList RC {}
-    | STRUCT Tag {}
+StructSpecifier : STRUCT OptTag LC DefList RC {
+        $$ = initNode("StructSpecifier", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+        addChild($$, $5);
+    }
+    | STRUCT Tag {
+        $$ = initNode("StructSpecifier", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
     ;
-OptTag : ID {}
-    | /* empty */ {}
+OptTag : ID {
+        $$ = initNode("OptTag", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | /* empty */ { $$ = NULL; }
     ;
-Tag : ID {}
+Tag : ID {
+        $$ = initNode("Tag", " ", @$.first_line);
+        addChild($$, $1);
+    }
     ;
 
 /* Declarators */
-VarDec : ID {}
-    | VarDec LB INT RB {}
+VarDec : ID {
+        $$ = initNode("VarDec", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | VarDec LB INT RB {
+        $$ = initNode("VarDec", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+    }
     ;
-FunDec : ID LP VarList RP {}
-    | ID LP RP {}
+FunDec : ID LP VarList RP {
+        $$ = initNode("FunDec", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+    }
+    | ID LP RP {
+        $$ = initNode("FunDec", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-VarList : ParamDec COMMA VarList {}
-    | ID LP RP {}
+VarList : ParamDec COMMA VarList {
+        $$ = initNode("VarList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | ID LP RP {
+        $$ = initNode("VarList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-ParamDec : Specifier VarDec {}
+ParamDec : Specifier VarDec {
+        $$ = initNode("ParamDec", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
     ;
 
 /* Statements */
-CompSt : LC DefList StmtList RC {}
+CompSt : LC DefList StmtList RC {
+        $$ = initNode("CompSt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-StmtList : Stmt StmtList {}
-    | /* empty */ {}
+StmtList : Stmt StmtList {
+        $$ = initNode("StmtList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | /* empty */ { $$ = NULL; }
     ;
-Stmt : Exp Stmt {}
-    | CompSt {}
-    | RETURN Exp SEMI {}
-    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {}
-    | IF LP Exp RP Stmt ELSE Stmt {} 
-    | WHILE LP Exp RP Stmt {}
+Stmt : Exp Stmt {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | CompSt {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | RETURN Exp SEMI {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+        addChild($$, $5);
+    }
+    | IF LP Exp RP Stmt ELSE Stmt {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+        addChild($$, $5);
+        addChild($$, $6);
+        addChild($$, $7);
+    } 
+    | WHILE LP Exp RP Stmt {
+        $$ = initNode("Stmt", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+        addChild($$, $5);
+    }
     ;
 
 /* Local Definitions */
-DefList : Def DefList {}
-    | /* empty */ {}
+DefList : Def DefList {
+        $$ = initNode("DefList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | /* empty */ { $$ = NULL; }
     ;
-Def : Specifier DecList SEMI {}
+Def : Specifier DecList SEMI {
+        $$ = initNode("Def", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-DecList : Dec {}
-    | Dec COMMA DecList {}
+DecList : Dec {
+        $$ = initNode("DecList", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | Dec COMMA DecList {
+        $$ = initNode("DecList", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
-Dec : VarDec {}
-    | VarDec ASSIGNOP Exp {}
+Dec : VarDec {
+        $$ = initNode("Dec", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | VarDec ASSIGNOP Exp {
+        $$ = initNode("Dec", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     ;
 
 /* Expressions */
-Exp : Exp ASSIGNOP Exp {}
-    | Exp AND Exp {}
-    | Exp OR Exp {}
-    | Exp RELOP Exp {}
-    | Exp PLUS Exp {}
-    | Exp MINUS Exp {}
-    | Exp STAR Exp {}
-    | Exp DIV Exp {}
-    | LP Exp RP {}
-    | MINUS Exp %prec UMINUS {}
-    | NOT Exp {}
-    | ID LP Args RP {}
-    | ID LP RP {}
-    | Exp LB Exp RB {}
-    | Exp DOT ID {}
-    | ID {}
-    | INT {}
-    | FLOAT {}
+Exp : Exp ASSIGNOP Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp AND Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp OR Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp RELOP Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp PLUS Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp MINUS Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp STAR Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp DIV Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | LP Exp RP {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | MINUS Exp %prec UMINUS {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | NOT Exp {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+    }
+    | ID LP Args RP {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+    }
+    | ID LP RP {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp LB Exp RB {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+        addChild($$, $4);
+    }
+    | Exp DOT ID {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | ID {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | INT {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+    }
+    | FLOAT {
+        $$ = initNode("Exp", " ", @$.first_line);
+        addChild($$, $1);
+    }
     ;
 
-Args : Exp COMMA Args {}
-    | Exp {}
+Args : Exp COMMA Args {
+        $$ = initNode("Args", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
+    | Exp {
+        $$ = initNode("Args", " ", @$.first_line);
+        addChild($$, $1);
+    }
     ;
 
 %%

@@ -7,7 +7,7 @@ extern int yylineno;
 extern void yyrestart(FILE*);
 extern void yyparse(void);
 
-Node *GrammarTree;
+Node* tree;
 
 int main(int argc, char **argv) {
 	if (argc > 1) {
@@ -17,13 +17,13 @@ int main(int argc, char **argv) {
 			return -1;
 		}
 
-		GrammarTree = NULL;
+		tree = NULL;
 
 		yylineno = 1;
 		yyrestart(file);
 		yyparse();
 
-		//destroyTree(GrammarTree);
+		//destroyTree(tree);
 
 		return 0;
 	}
