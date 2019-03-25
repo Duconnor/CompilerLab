@@ -15,7 +15,7 @@ typedef struct LexemeInNode {
 } Lexeme;
 
 typedef struct GrammarTreeNode {
-	struct GrammarTreeNode *parent; /* Pointer pointing to the parent node of this node */
+	//struct GrammarTreeNode *parent; /* Pointer pointing to the parent node of this node */
 	struct GrammarTreeNode *child; /* Pointer pointing to the first child of this node */
 	struct GrammarTreeNode *sibling; /* Pointer pointing to the sibling of this node */
 	Lexeme lexeme;

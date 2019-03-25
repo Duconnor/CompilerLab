@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "tree.h"
 
 Node* initNode(char *type, char *value, int linenum) {
 	Node *node = (Node*)malloc(sizeof(Node));
-	node->parent = node->child = node->sibling = NULL;
+	//node->parent = node->child = node->sibling = NULL;
 	if (type != NULL) {
 		strcpy(node->lexeme.type, type);
 	} else {
@@ -22,7 +23,7 @@ Node* initNode(char *type, char *value, int linenum) {
 }
 
 void addChild(Node *parent, Node *child) {
-	child->parent = parent;
+	//child->parent = parent;
 	if (parent->child == NULL)
 		parent->child = child;
 	else {
@@ -43,7 +44,15 @@ static void printTreeRec(Node *root, int height) {
 	if (strcmp(root->lexeme.value, " ") != 0) {
 		printf(": %s\n", root->lexeme.value);
 	} else {
-		printf(" (%d)\n", root->lexeme.linenum);
+		int isTerminal = 1;
+		for (int i = 0; i < strlen(root->lexeme.type); i++)
+			if (!isupper(root->lexeme.type[i])) {
+				printf(" (%d)\n", root->lexeme.linenum);
+				isTerminal = 0;
+				break;
+			}
+		if (isTerminal)
+			printf("\n");
 	}
 	Node *node = root->child;
 	while (node != NULL) {
