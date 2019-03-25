@@ -48,34 +48,34 @@ WHILE while
 	/* [{letter}] is not acceptable, why? */
 %%
 \n { yycolumn = 1; }
-{STRUCT} { return STRUCT; }
-{RETURN} { return RETURN; }
-{IF} { return IF; }
-{ELSE} { return ELSE; }
-{WHILE} { return WHILE; }
-{TYPE} { return TYPE; }
+{STRUCT} { yylval.type_node = initNode("STRUCT", NULL, yylineno); return STRUCT; }
+{RETURN} { yylval.type_node = initNode("RETURN", NULL, yylineno); return RETURN; }
+{IF} { yylval.type_node = initNode("IF", NULL, yylineno); return IF; }
+{ELSE} { yylval.type_node = initNode("ELSE", NULL, yylineno); return ELSE; }
+{WHILE} { yylval.type_node = initNode("WHILE", NULL, yylineno); return WHILE; }
+{TYPE} { yylval.type_node = initNode("TYPE", yytext, yylineno); return TYPE; }
 	/*{SCIFLOAT} { printf("SCI: %s\n", yytext); }*/
-{FLOAT} { return FLOAT; }
-{INT} { return INT; }
-{OCT} { return INT; }
-{HEX} { return INT; }
-{ID} { return ID; }
-{SEMI} { return SEMI; }
-{COMMA} { return COMMA; }
-{ASSIGNOP} { return ASSIGNOP; }
-{RELOP} { return RELOP; }
-{PLUS} { return PLUS; }
-{MINUS} { return MINUS; }
-{STAR} { return STAR; }
-{DIV} { return DIV; }
-{AND} { return AND; }
-{OR} { return OR; }
-{NOT} { return NOT; }
-{LP} { return LP; }
-{RP} { return RP; }
-{LB} { return LB; }
-{RB} { return RB; }
-{LC} { return LC; }
-{RC} { return RC; }
+{FLOAT} { yylval.type_node = initNode("FLOAT", yytext, yylineno); return FLOAT; }
+{INT} { yylval.type_node = initNode("INT", yytext, yylineno); return INT; }
+{OCT} { yylval.type_node = initNode("INT", itoa(strtol(yytext, NULL, 8)), yylineno); return INT; }
+{HEX} { yylval.type_node = initNode("INT", itoa(strtol(yytext, NULL, 16)), yylineno); return INT; }
+{ID} { yylval.type_node = initNode("ID", yytext, yylineno); return ID; }
+{SEMI} { yylval.type_node = initNode("SEMI", NULL, yylineno); return SEMI; }
+{COMMA} { yylval.type_node = initNode("COMMA", NULL, yylineno); return COMMA; }
+{ASSIGNOP} { yylval.type_node = initNode("ASSIGNOP", NULL, yylineno); return ASSIGNOP; }
+{RELOP} { yylval.type_node = initNode("RELOP", NULL, yylineno); return RELOP; }
+{PLUS} { yylval.type_node = initNode("PLUS", NULL, yylineno); return PLUS; }
+{MINUS} { yylval.type_node = initNode("MINUS", NULL, yylineno); return MINUS; }
+{STAR} { yylval.type_node = initNode("STAR", NULL, yylineno); return STAR; }
+{DIV} { yylval.type_node = initNode("DIV", NULL, yylineno); return DIV; }
+{AND} { yylval.type_node = initNode("AND", NULL, yylineno); return AND; }
+{OR} { yylval.type_node = initNode("OR", NULL, yylineno); return OR; }
+{NOT} { yylval.type_node = initNode("NOT", NULL, yylineno); return NOT; }
+{LP} { yylval.type_node = initNode("LP", NULL, yylineno); return LP; }
+{RP} { yylval.type_node = initNode("RP", NULL, yylineno); return RP; }
+{LB} { yylval.type_node = initNode("LB", NULL, yylineno); return LB; }
+{RB} { yylval.type_node = initNode("RB", NULL, yylineno); return RB; }
+{LC} { yylval.type_node = initNode("LC", NULL, yylineno); return LC; }
+{RC} { yylval.type_node = initNode("RC", NULL, yylineno); return RC; }
 %%
 
