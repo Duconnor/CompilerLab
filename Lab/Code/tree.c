@@ -66,8 +66,7 @@ void destroyTree(Node *root) {
 	free(root);
 }
 
-
-/* Unit test */
+/*
 int main() {
 	int num = 0;
 	Node *root = initNode("S", NULL, num++);
@@ -86,3 +85,4 @@ int main() {
 	printTree(root);
 	destroyTree(root);
 }
+*/

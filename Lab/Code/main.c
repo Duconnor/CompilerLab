@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "tree.h"
 
 extern FILE *yyin;
 extern int yylineno;
 extern void yyrestart(FILE*);
 extern void yyparse(void);
+
+Node *GrammarTree;
 
 int main(int argc, char **argv) {
 	if (argc > 1) {
@@ -13,9 +16,15 @@ int main(int argc, char **argv) {
 			perror(argv[1]);
 			return -1;
 		}
+
+		GrammarTree = NULL;
+
 		yylineno = 1;
 		yyrestart(file);
 		yyparse();
+
+		//destroyTree(GrammarTree);
+
 		return 0;
 	}
 	return -1;

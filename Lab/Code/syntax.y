@@ -1,21 +1,37 @@
 %locations
 %{
     #include <stdio.h>
+    #include <stdlib.h>
+    #include "tree.h"
     #include "lex.yy.c"
+    extern Node* GrammarTree;
 %}
 
 /* declared types */
 %union{
-    int type_int;
-    float type_float;
-    double type_double;
+    Node* type_node;
 }
 
 /* declared tokens */
-%token <type_int> INT FLOAT ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
+%token <type_node> INT FLOAT ID SEMI COMMA ASSIGNOP RELOP PLUS MINUS STAR DIV AND OR DOT NOT TYPE LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE
 
 /* declared non-terminals */
-%type <type_double> Program ExtDefList ExtDef ExtDecList Specifier StructSpecifier OptTag Tag VarDec FunDec VarList ParamDec CompSt StmtList Stmt DefList Def DecList Dec Exp Args
+%type <type_node> Program ExtDefList ExtDef ExtDecList Specifier StructSpecifier OptTag Tag VarDec FunDec VarList ParamDec CompSt StmtList Stmt DefList Def DecList Dec Exp Args
+
+/* priority & associativity */
+%right ASSIGNOP
+%left OR
+%left AND
+%left RELOP
+%left PLUS MINUS
+%left STAR DIV
+%right NOT UMINUS
+%left DOT LB RB LP RP
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
+// Pay attention to MINUS and UMINUS!
+// Reference: Section-5.4 in http://www.gnu.org/software/bison/manual/html_node/Contextual-Precedence.html
 
 %%
 /* High-level Definitions */
@@ -31,6 +47,7 @@ ExtDef : Specifier ExtDecList SEMI {}
 ExtDecList : VarDec {}
     | VarDec COMMA ExtDecList {}
     ;
+
 /* Specifiers */
 Specifier : TYPE {}
     | StructSpecifier {}
@@ -43,6 +60,7 @@ OptTag : ID {}
     ;
 Tag : ID {}
     ;
+
 /* Declarators */
 VarDec : ID {}
     | VarDec LB INT RB {}
@@ -55,6 +73,7 @@ VarList : ParamDec COMMA VarList {}
     ;
 ParamDec : Specifier VarDec {}
     ;
+
 /* Statements */
 CompSt : LC DefList StmtList RC {}
     ;
@@ -64,10 +83,11 @@ StmtList : Stmt StmtList {}
 Stmt : Exp Stmt {}
     | CompSt {}
     | RETURN Exp SEMI {}
-    | IF LP Exp RP Stmt {}
-    | IF LP Exp RP Stmt ELSE Stmt {}
+    | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {}
+    | IF LP Exp RP Stmt ELSE Stmt {} 
     | WHILE LP Exp RP Stmt {}
     ;
+
 /* Local Definitions */
 DefList : Def DefList {}
     | /* empty */ {}
@@ -80,6 +100,7 @@ DecList : Dec {}
 Dec : VarDec {}
     | VarDec ASSIGNOP Exp {}
     ;
+
 /* Expressions */
 Exp : Exp ASSIGNOP Exp {}
     | Exp AND Exp {}
@@ -90,7 +111,7 @@ Exp : Exp ASSIGNOP Exp {}
     | Exp STAR Exp {}
     | Exp DIV Exp {}
     | LP Exp RP {}
-    | MINUS Exp {}
+    | MINUS Exp %prec UMINUS {}
     | NOT Exp {}
     | ID LP Args RP {}
     | ID LP RP {}
@@ -100,6 +121,7 @@ Exp : Exp ASSIGNOP Exp {}
     | INT {}
     | FLOAT {}
     ;
+
 Args : Exp COMMA Args {}
     | Exp {}
     ;

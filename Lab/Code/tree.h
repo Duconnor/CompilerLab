@@ -2,8 +2,11 @@
  * Data structure of grammar tree
  * Use parent-child(left most child)-sibling mode to represent the tree
 */
+#ifndef TREE_H
+#define TREE_H
 
 #define CAPACITY 32
+
 
 typedef struct LexemeInNode {
 	char type[CAPACITY];
@@ -25,3 +28,5 @@ void addChild(Node *parent, Node *child);
 void printTree(Node *root);
 
 void destroyTree(Node *root);
+
+#endif

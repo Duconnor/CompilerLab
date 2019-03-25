@@ -29,10 +29,6 @@ lexical: $(LFILE)
 syntax-c: $(YFILE)
 	$(BISON) -o $(YFC) -d -v $(YFILE)
 
-# the following content was added by dyx for debug use
-lex: lexical
-	$(CC) $(CFILES) -lfl -o lex
-
 -include $(patsubst %.o, %.d, $(OBJS))
 
 # 定义的一些伪目标
@@ -44,5 +40,3 @@ clean:
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f $(LFC) $(YFC) $(YFC:.c=.h)
 	rm -f *~
-	# the following content was added by dyx
-	rm -f lex
