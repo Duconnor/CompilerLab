@@ -3,6 +3,8 @@
 	#include <stdlib.h>
 	#include "syntax.tab.h"
 
+	int aErrorFree = 1;
+
 	int yycolumn = 1;
 	#define YY_USER_ACTION \
 	yylloc.first_line = yylloc.last_line = yylineno; \
@@ -47,7 +49,7 @@ RETURN return
 IF if
 ELSE else
 WHILE while
-SPACE [ \t]
+SPACE [ \t\r]
 	/* [{letter}] is not acceptable, why? */
 %%
 \n { yycolumn = 1; }
@@ -88,6 +90,9 @@ SPACE [ \t]
 {RB} { yylval.type_node = initNode("RB", NULL, yylineno); return RB; }
 {LC} { yylval.type_node = initNode("LC", NULL, yylineno); return LC; }
 {RC} { yylval.type_node = initNode("RC", NULL, yylineno); return RC; }
-. { printf("Error type A at Line %d: Mysterious character \"%s\"\n", yylineno, yytext); }
+.	{ 
+		printf("Error type A at Line %d: Mysterious character \"%s\"\n", yylineno, yytext);
+		aErrorFree = 0;
+	}
 %%
 

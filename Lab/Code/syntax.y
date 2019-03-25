@@ -5,6 +5,7 @@
     #include "tree.h"
     #include "lex.yy.c"
     extern Node* tree;
+    int bErrorFree = 1;
 %}
 
 /* declared types */
