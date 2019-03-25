@@ -34,6 +34,7 @@ DIV \/
 AND &&
 OR \|\|
 NOT \!
+DOT \.
 TYPE int|float
 LP \(
 RP \)
@@ -77,6 +78,7 @@ WHILE while
 {DIV} { yylval.type_node = initNode("DIV", NULL, yylineno); return DIV; }
 {AND} { yylval.type_node = initNode("AND", NULL, yylineno); return AND; }
 {OR} { yylval.type_node = initNode("OR", NULL, yylineno); return OR; }
+{DOT} { yylval.type_node = initNode("DOT", NULL, yylineno); return DOT; }
 {NOT} { yylval.type_node = initNode("NOT", NULL, yylineno); return NOT; }
 {LP} { yylval.type_node = initNode("LP", NULL, yylineno); return LP; }
 {RP} { yylval.type_node = initNode("RP", NULL, yylineno); return RP; }
