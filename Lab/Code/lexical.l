@@ -1,5 +1,6 @@
 %option yylineno
 %{
+	#include <stdlib.h>
 	#include "syntax.tab.h"
 
 	int yycolumn = 1;
@@ -57,8 +58,14 @@ WHILE while
 	/*{SCIFLOAT} { printf("SCI: %s\n", yytext); }*/
 {FLOAT} { yylval.type_node = initNode("FLOAT", yytext, yylineno); return FLOAT; }
 {INT} { yylval.type_node = initNode("INT", yytext, yylineno); return INT; }
-{OCT} { yylval.type_node = initNode("INT", itoa(strtol(yytext, NULL, 8)), yylineno); return INT; }
-{HEX} { yylval.type_node = initNode("INT", itoa(strtol(yytext, NULL, 16)), yylineno); return INT; }
+{OCT} {	int val = 0;
+		sscanf(yytext, "%o", &val);
+		sprintf(yytext, "%d", val);
+		yylval.type_node = initNode("INT", yytext, yylineno); return INT; }
+{HEX} { int val = 0;
+		sscanf(yytext, "%x", &val);
+		sprintf(yytext, "%d", val);
+		yylval.type_node = initNode("INT", yytext, yylineno); return INT; }
 {ID} { yylval.type_node = initNode("ID", yytext, yylineno); return ID; }
 {SEMI} { yylval.type_node = initNode("SEMI", NULL, yylineno); return SEMI; }
 {COMMA} { yylval.type_node = initNode("COMMA", NULL, yylineno); return COMMA; }
