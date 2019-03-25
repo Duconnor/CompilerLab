@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "tree.h"
 
@@ -43,7 +44,15 @@ static void printTreeRec(Node *root, int height) {
 	if (strcmp(root->lexeme.value, " ") != 0) {
 		printf(": %s\n", root->lexeme.value);
 	} else {
-		printf(" (%d)\n", root->lexeme.linenum);
+		int isTerminal = 1;
+		for (int i = 0; i < strlen(root->lexeme.type); i++)
+			if (!isupper(root->lexeme.type[i])) {
+				printf(" (%d)\n", root->lexeme.linenum);
+				isTerminal = 0;
+				break;
+			}
+		if (isTerminal)
+			printf("\n");
 	}
 	Node *node = root->child;
 	while (node != NULL) {

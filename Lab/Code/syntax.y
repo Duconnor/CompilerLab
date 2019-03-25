@@ -167,6 +167,7 @@ CompSt : LC DefList StmtList RC {
         addChild($$, $1);
         addChild($$, $2);
         addChild($$, $3);
+		addChild($$, $4);
     }
     ;
 StmtList : Stmt StmtList {
