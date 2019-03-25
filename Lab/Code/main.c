@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 		yylineno = 1;
 		yyrestart(file);
 		yyparse();
-
+		printTree(tree);
 		//destroyTree(tree);
 
 		return 0;

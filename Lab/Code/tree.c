@@ -6,7 +6,7 @@
 
 Node* initNode(char *type, char *value, int linenum) {
 	Node *node = (Node*)malloc(sizeof(Node));
-	node->parent = node->child = node->sibling = NULL;
+	//node->parent = node->child = node->sibling = NULL;
 	if (type != NULL) {
 		strcpy(node->lexeme.type, type);
 	} else {
@@ -22,7 +22,7 @@ Node* initNode(char *type, char *value, int linenum) {
 }
 
 void addChild(Node *parent, Node *child) {
-	child->parent = parent;
+	//child->parent = parent;
 	if (parent->child == NULL)
 		parent->child = child;
 	else {

@@ -42,7 +42,7 @@ Program : ExtDefList {
     }
     ;
 ExtDefList : ExtDef ExtDefList {
-        $$ = initNode("ExtDecList", " ", @$.first_line);
+        $$ = initNode("ExtDefList", " ", @$.first_line);
         addChild($$, $1);
         addChild($$, $2);
     }
@@ -176,7 +176,7 @@ StmtList : Stmt StmtList {
     }
     | /* empty */ { $$ = NULL; }
     ;
-Stmt : Exp Stmt {
+Stmt : Exp SEMI {
         $$ = initNode("Stmt", " ", @$.first_line);
         addChild($$, $1);
         addChild($$, $2);
