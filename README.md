@@ -2,3 +2,5 @@
 ## The lab code of course *Principles and Techniques of Compilers* 
 ### Progress
 - Start Lab1 (2019.3.4)
+- Finish Syntax Tree (2019.3.25)
+- Finish the Handling of Type-A Errors (2019.3.25)
