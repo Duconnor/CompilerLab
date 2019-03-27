@@ -1,10 +1,13 @@
 %locations
+%define parse.error verbose
+%define parse.lac none  
 %{
     #include <stdio.h>
     #include <stdlib.h>
     #include "tree.h"
     #include "lex.yy.c"
     extern Node* tree;
+    extern int yylineno;
     int bErrorFree = 1;
 %}
 
@@ -170,6 +173,9 @@ CompSt : LC DefList StmtList RC {
         addChild($$, $3);
 		addChild($$, $4);
     }
+    | LC error RC {
+        bErrorFree = 0;
+    }
     ;
 StmtList : Stmt StmtList {
         $$ = initNode("StmtList", " ", @$.first_line);
@@ -218,6 +224,9 @@ Stmt : Exp SEMI {
         addChild($$, $3);
         addChild($$, $4);
         addChild($$, $5);
+    }
+    | error SEMI {
+        bErrorFree = 0;
     }
     ;
 
@@ -362,6 +371,9 @@ Exp : Exp ASSIGNOP Exp {
         $$ = initNode("Exp", " ", @$.first_line);
         addChild($$, $1);
     }
+    | LP error RP {
+        bErrorFree = 0;
+    }
     ;
 
 Args : Exp COMMA Args {
@@ -377,3 +389,6 @@ Args : Exp COMMA Args {
     ;
 
 %%
+void yyerror(char* msg){
+    fprintf(stderr, "Error type B at Line %d: %s\n", yylineno, msg + 14);
+}
