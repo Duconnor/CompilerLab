@@ -69,6 +69,9 @@ ExtDef : Specifier ExtDecList SEMI {
         addChild($$, $2);
         addChild($$, $3);
     }
+    | error SEMI{
+        bErrorFree = 0;
+    }
     ;
 ExtDecList : VarDec {
         $$ = initNode("ExtDecList", " ", @$.first_line);
@@ -175,7 +178,6 @@ CompSt : LC DefList StmtList RC {
     }
     | LC error RC {
         bErrorFree = 0;
-        //printf("1\n");
     }
     ;
 StmtList : Stmt StmtList {
@@ -228,7 +230,6 @@ Stmt : Exp SEMI {
     }
     | error SEMI {
         bErrorFree = 0;
-        //printf("2\n");
     }
     | IF error ELSE {
         bErrorFree = 0;
@@ -248,6 +249,9 @@ Def : Specifier DecList SEMI {
         addChild($$, $1);
         addChild($$, $2);
         addChild($$, $3);
+    }
+    | error SEMI{
+        bErrorFree = 0;
     }
     ;
 DecList : Dec {
