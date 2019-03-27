@@ -175,6 +175,7 @@ CompSt : LC DefList StmtList RC {
     }
     | LC error RC {
         bErrorFree = 0;
+        //printf("1\n");
     }
     ;
 StmtList : Stmt StmtList {
@@ -226,6 +227,10 @@ Stmt : Exp SEMI {
         addChild($$, $5);
     }
     | error SEMI {
+        bErrorFree = 0;
+        //printf("2\n");
+    }
+    | IF error ELSE {
         bErrorFree = 0;
     }
     ;

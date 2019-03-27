@@ -91,7 +91,7 @@ SPACE [ \t\r]
 {LC} { yylval.type_node = initNode("LC", NULL, yylineno); return LC; }
 {RC} { yylval.type_node = initNode("RC", NULL, yylineno); return RC; }
 .	{ 
-		printf("Error type A at Line %d: Mysterious character \"%s\"\n", yylineno, yytext);
+		printf("Error type A at Line %d: mysterious character \"%s\"\n", yylineno, yytext);
 		aErrorFree = 0;
 	}
 %%
