@@ -60,7 +60,6 @@ SPACE [ \t\r]
 {ELSE} { yylval.type_node = initNode("ELSE", NULL, yylineno); return ELSE; }
 {WHILE} { yylval.type_node = initNode("WHILE", NULL, yylineno); return WHILE; }
 {TYPE} { yylval.type_node = initNode("TYPE", yytext, yylineno); return TYPE; }
-	/*{SCIFLOAT} { printf("SCI: %s\n", yytext); }*/
 {FLOAT} { yylval.type_node = initNode("FLOAT", yytext, yylineno); return FLOAT; }
 {INT} { yylval.type_node = initNode("INT", yytext, yylineno); return INT; }
 {OCT} {	int val = 0;

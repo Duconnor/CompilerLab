@@ -66,6 +66,8 @@ void printTree(Node *root) {
 }
 
 void destroyTree(Node *root) {
+	if(root == NULL)
+		return;
 	Node *node = root->child;
 	while (node != NULL) {
 		Node *temp = node;

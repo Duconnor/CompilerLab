@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 		yyparse();
 		if(aErrorFree && bErrorFree)
 			printTree(tree);
-		//destroyTree(tree);
+		destroyTree(tree);
 
 		return 0;
 	}
