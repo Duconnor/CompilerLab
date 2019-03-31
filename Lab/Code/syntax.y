@@ -8,6 +8,7 @@
     #include "lex.yy.c"
     extern Node* tree;
     extern int yylineno;
+    extern void yyerror(const char *msg);
     int bErrorFree = 1;
 %}
 
@@ -398,6 +399,6 @@ Args : Exp COMMA Args {
     ;
 
 %%
-void yyerror(char* msg){
+void yyerror(const char* msg){
     fprintf(stderr, "Error type B at Line %d: %s\n", yylineno, msg + 14);
 }
