@@ -12,5 +12,12 @@
 
 unsigned int hash(char* name);
 
+void initTable();
+
+int putVar(FieldList var);
+int putStruct(Structure strc);
+
+FieldList getVar(char* name);
+Structure getStruct(char* name);
 
 #endif

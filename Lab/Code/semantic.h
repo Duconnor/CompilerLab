@@ -27,10 +27,10 @@ struct FieldList_ {
 struct Structure_ {
     char* name;
     FieldList member;
+    Structure tail;
 };
 
 struct Function_ {
-    char* name;
     int isDeclared;
     int isDefined;
     Type retVal;
