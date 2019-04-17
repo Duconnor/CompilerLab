@@ -27,9 +27,29 @@ int putStruct(Structure strc){
 }
 
 FieldList getVar(char* name){
-
+	/* Do a search in vatTable according to name */
+	int hashCode = hash(name);
+	FieldList head = varTable[hashCode];
+	while (head != NULL) {
+		/* Check one by one to see if we get a hit! */
+		if (strcmp(head->name, name) == 0)
+			return head;
+		else
+			head = head->tail;
+	}
+	return NULL;
 }
 
 Structure getStruct(char* name){
-    
+	/* Do a search in structTable according to name */
+    int hashCode = hash(name);
+	Structure head = structTable[hashCode];
+	while (head != NULL) {
+		/* Check one by one ~ */
+		if (strcmp(head->name, name) == 0)
+			return head;
+		else
+			head = head->tail;
+	}
+	return NULL;
 }
