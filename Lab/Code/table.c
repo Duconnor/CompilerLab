@@ -54,7 +54,7 @@ int putStruct(Structure strc){
 
 FieldList getVar(char* name){
 	/* Do a search in vatTable according to name */
-	int hashCode = hash(name);
+	unsigned int hashCode = hash(name);
 	FieldList head = varTable[hashCode];
 	while (head != NULL) {
 		/* Check one by one to see if we get a hit! */
@@ -68,7 +68,7 @@ FieldList getVar(char* name){
 
 Structure getStruct(char* name){
 	/* Do a search in structTable according to name */
-    int hashCode = hash(name);
+	unsigned int hashCode = hash(name);
 	Structure head = structTable[hashCode];
 	while (head != NULL) {
 		/* Check one by one ~ */
