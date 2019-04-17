@@ -8,6 +8,9 @@
 #include "tree.h"
 #include "semantic.h"
 
+#define TABLE_SIZE 1024
+
+unsigned int hash(char* name);
 
 
 #endif

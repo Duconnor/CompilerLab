@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "tree.h"
+#include "semantic.h"
+#include "table.h"
 
 extern FILE *yyin;
 extern int yylineno;
