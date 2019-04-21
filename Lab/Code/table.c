@@ -26,7 +26,8 @@ int putVar(FieldList var){
     else{
         FieldList tmp = varTable[hashCode];
         for(; tmp->tail != NULL; tmp = tmp->tail)
-            if(strcmp(tmp->name, var->name) == 0)
+            /* XXX: Var and Func can have the same name */
+            if(strcmp(tmp->name, var->name) == 0 && tmp->type->kind == var->type->kind)
                 return -1;
         if(strcmp(tmp->name, var->name) == 0)
             return -1;
@@ -52,13 +53,14 @@ int putStruct(Structure strc){
     return 0;
 }
 
-FieldList getVar(char* name){
+FieldList getVar(char* name, int kind){
 	/* Do a search in vatTable according to name */
 	unsigned int hashCode = hash(name);
 	FieldList head = varTable[hashCode];
 	while (head != NULL) {
 		/* Check one by one to see if we get a hit! */
-		if (strcmp(head->name, name) == 0)
+        /* XXX: We should consider the kind of Variable */
+		if (strcmp(head->name, name) == 0 && head->type->kind == kind)
 			return head;
 		else
 			head = head->tail;

@@ -1,11 +1,12 @@
 #include "semantic.h"
+#include <stdio.h>
+
 extern FieldList symbolTable[TABLE_SIZE];
 
-extern void VarList(Type type, Node *root);
-extern Type Specifier(Node *root);
-extern void ParamDec(Type type, Node *root);
-extern void StmtList(Type type, Node *root);
-extern void Stmt(Type type, Node *root);
+extern int putVar(FieldList var);
+extern putStruct(Structure strc);
+extern FieldList getVar(char* name, int kind);
+extern Structure getStruct(char* name);
 
 static int isEquivalent(Type this, Type that) {
 	/* return whether this == that */
@@ -42,6 +43,74 @@ static int isEquivalent(Type this, Type that) {
 	}
 }
 
+/* High-level Definitions */
+void Program(Node *root) {
+    ExtDefList(root->child);
+}
+
+void ExtDefList(Node *root) {
+    if(root->child != NULL){
+        /* Case for production: ExtDefList -> ExtDef ExtDefList */
+        ExtDef(root->child);
+        ExtDefList(root->child->sibling);
+    }
+    else
+        /* Case for production: ExtDefList -> epsilon */    
+        return;
+
+}
+
+void ExtDef(Node *root) {
+    Node *SpcNode = root->child;
+    Type type = Specifier(SpcNode);
+    Node *root = SpcNode->sibling;
+    if(strcmp(root->lexeme.type, "SEMI"))
+        /* Case for ExtDef -> Specifier SEMI */
+        return;
+    else if(strcmp(root->lexeme.type, "ExtDecList") == 0) 
+        /* Case for ExtDef -> Specifier ExtDecList SEMI */
+        ExtDecList(type, root);
+    else if(strcmp(root->lexeme.type, "FunDec") == 0) {
+        FieldList funcVar = FunDec(type, root);
+        Function func = funcVar->type->u.function;
+        if(strcmp(root->sibling->lexeme.type, "Compst") == 0) {
+            /* Case for ExtDef -> Specifier FunDec CompSt */
+            func->isDefined = 1;
+            /* Check if there is a function with the same name*/
+            FieldList funcVarChecker = getVar(funcVar->name, funcVar->type->kind);
+            if(funcVarChecker == NULL)
+                /* A new function, insert it into table */
+                putVar(funcVar);
+            else {
+                Function funcChecker = funcVarChecker->type->u.function;
+                if(funcChecker->isDefined == 1)
+                    printf("Error type 4 at Line %d: Redefined function \"%s\"\n", root->lexeme.linenum, funcVar->name);
+                else {
+                    /* TODO: Check if there are inconsistent declarations */
+                }
+            }
+        }
+        else {
+            /* Case for ExtDef -> Specifier FunDec SEMI */
+            /* TODO: Check if there are inconsistent declarations */
+        }
+    }    
+}
+
+void ExtDecList(Type type, Node *root) {
+    Field newVar = VarDec(type, root->child);
+    /* TODO: Check and insert(or not) */
+    root = root->child->sibling;
+    if(root == NULL)
+        /* Case for ExtDecList -> VarDec */
+    else {
+        root = root->sibling;
+        ExtDecList(type, root);
+    }
+
+}
+
+/* Declarators */
 FieldList VarDec(Type type, Node *root) {
 	if (strcmp(root->child->lexeme.type, "ID")) {
 		/* Case for production: VarDec -> ID */
@@ -86,24 +155,32 @@ FieldList VarDec(Type type, Node *root) {
 }
 
 FieldList FunDec(Type type, Node *root) {
-	FieldList newVar = (FieldList)malloc(sizeof(FieldList));
+    /* XXX: Here "type" should be the type of retVal */
+    /* XXX: It should be "sizeof(FieldList_)" */
+	FieldList newVar = (FieldList)malloc(sizeof(FieldList_));
 	/* Set the ID first */
 	newVar->name = root->child->lexeme.value;
+    newVar->type = (Type)malloc(sizeof(Type_));
+    newVar->type->kind = FUNCTION;
+    Function newFunc = (Function)malloc(sizeof(Function_));
+    newVar->type->u.function = newFunc;
+    newFunc->isDeclare = 1;
+    newFunc->isDefined = 0;
+    newFunc->retVal = type;
 	root = root->child->sibling->sibling;
 	if (strcmp(root->lexeme.type, "RP") == 0) {
 		/* Case for production: FunDec -> ID LP RP */
-		type->u.function->parameters = NULL; /* No parameters */
-		newVar->type = type;
+		newFunc->parameters = NULL; /* No parameters */
 		return newVar;
 	} else {
 		/* Case for production: FunDec -> ID LP VarList RP */
-		/* VarList will modify type and fill in the parameters */
-		VarList(type, root);
-		newVar->type = type;
+		/* VarList() should return a FieldList */
+		newFunc->parameters = VarList(root);
 		return newVar;
 	}
 }
 
+/* XXX: VarList() and ParamDec() needs to rewrite */
 void VarList(Type type, Node *root) {
 	ParamDec(type, root->child);
 	root = root->child->sibling;
@@ -133,6 +210,7 @@ void ParamDec(Type type, Node *root) {
 	}
 }
 
+/* Stataments */
 void CompSt(Type type, Node *root) {
 	/* XXX: might need some change here */
 	DefList(root->child->sibling);

@@ -17,7 +17,7 @@ void initTable();
 int putVar(FieldList var);
 int putStruct(Structure strc);
 
-FieldList getVar(char* name);
+FieldList getVar(char* name, int kind);
 Structure getStruct(char* name);
 
 #endif

@@ -37,4 +37,24 @@ struct Function_ {
     FieldList parameters;
 };
 
+/* High-level Definitions */
+void Program(Node *root);
+void ExtDefList(Node *root);
+void ExtDef(Node *root);
+void ExtDecList(Type type, Node *root);
+
+/* Specifier */
+Type Specifier(Node *root);
+Type StructSpecifer(Node *root);
+
+/* Declarators */
+FieldList VarList(Type type, Node *root);
+FieldList FunDec(Type type, Node *root);
+void ParamDec(Type type, Node *root);
+
+/* Statements */
+void CompSt(Type type, Node *root);
+void StmtList(Type type, Node *root);
+void Stmt(Type type, Node *root);
+
 #endif
