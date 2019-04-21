@@ -102,6 +102,12 @@ void ExtDef(Node *root) {
 void ExtDecList(Type type, Node *root) {
     FieldList newVar = VarDec(type, root->child);
     /* TODO: Check and insert(or not) */
+	FieldList varChecker = getVar(newVar->name, newVar->type->kind);
+	Structure strcChecker = getStruct(newVar->name);
+	if(varChecker == NULL && strcChecker == NULL)
+		putVar(newVar);
+	else 
+		printf("Error type 3 at Line %d: Redefined variable \"%s\"\n");
     root = root->child->sibling;
     if(root == NULL)
         /* Case for ExtDecList -> VarDec */
@@ -152,11 +158,8 @@ Type StructSpecifer(Node *root) {
 		}
 		root = root->sibling->sibling;
 		newStrc->member = DefList(root);
-		if(newStrc->name != '0'){
 			/* TODO: Check and insert(or not) */
-		}
-		else
-			return type;
+		return type;			
 	}
 	else if(strcmp(root->lexeme.type, "Tag") == 0){
 		Structure strcChecker = getStruct(root->child->lexeme.value);
@@ -259,7 +262,7 @@ void VarList(FieldList list, Node *root) {
 		return ;
 	} else {
 		/* Case for production: VarList -> ParamDec COMMA VarList*/
-		VarList(list, root);
+		VarList(list, root->sibling);
 	}
 }
 
@@ -275,7 +278,7 @@ void CompSt(Type type, Node *root) {
 	/* XXX: might need some change here */
 	DefList(root->child->sibling);
 
-	StmtList(root->child->sibling->sibling);
+	StmtList(type, root->child->sibling->sibling);
 }
 
 void StmtList(Type type, Node *root) {
