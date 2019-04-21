@@ -7,3 +7,5 @@
 - Finish the Handling of Type-B Errors (2019.3.27)
 - Finish report (2019.3.28)
 - Finish Lab1 (2019.3.29)
+
+- Start Lab2 (2019.4.17)
