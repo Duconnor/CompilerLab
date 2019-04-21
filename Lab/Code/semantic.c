@@ -1,5 +1,6 @@
 #include "semantic.h"
 #include <stdio.h>
+#include <string.h>
 
 extern FieldList symbolTable[TABLE_SIZE];
 
@@ -7,6 +8,8 @@ extern int putVar(FieldList var);
 extern putStruct(Structure strc);
 extern FieldList getVar(char* name, int kind);
 extern Structure getStruct(char* name);
+
+static char strcName[3] = "00";
 
 static int isEquivalent(Type this, Type that) {
 	/* return whether this == that */
@@ -57,7 +60,6 @@ void ExtDefList(Node *root) {
     else
         /* Case for production: ExtDefList -> epsilon */    
         return;
-
 }
 
 void ExtDef(Node *root) {
@@ -98,16 +100,77 @@ void ExtDef(Node *root) {
 }
 
 void ExtDecList(Type type, Node *root) {
-    Field newVar = VarDec(type, root->child);
+    FieldList newVar = VarDec(type, root->child);
     /* TODO: Check and insert(or not) */
     root = root->child->sibling;
     if(root == NULL)
         /* Case for ExtDecList -> VarDec */
+		return;
     else {
         root = root->sibling;
         ExtDecList(type, root);
     }
 
+}
+
+Type Specifier(Node *root) {
+	Type type;
+	if(strcmp(root->child->lexeme.type, "TYPE") == 0) {
+		/* Case for production: Specifier -> TYPE */
+		type = (Type)malloc(sizeof(struct Type_));
+		type->kind = BASIC;
+		if(strcmp(root->child->lexeme.value, "int") == 0)
+			type->u.basic = 0;
+		else
+			type->u.basic = 1;
+	}
+	else {
+		/* Case for production: Specifier -> StructSpecifier */
+		type = StructSpecifer(root->child);
+	}
+	return type;
+}
+
+Type StructSpecifer(Node *root) {
+	root = root->child->sibling;
+	if(strcmp(root->lexeme.type, "OptTag") == 0) {
+		/* Case for production: StructSpecifier -> STRUCT OptTag LC DefList RC */
+		Type type = (Type)malloc(sizeof(struct Type_));
+		Structure newStrc = (Structure)malloc(sizeof(struct Structure_));
+		type->kind = STRUCTURE;
+		type->u.structure = newStrc;
+		if(root->child == NULL) {
+			/* Case for production: OptTag -> epsilon */
+			/* Anonymous structure */
+			newStrc->name = (char*)malloc(sizeof(char) * 3);
+			strcpy(newStrc->name, strcName);
+			strcName[1]++;
+		}
+		else {
+			/* Case for production: OptTag -> ID */
+			newStrc->name = root->child->lexeme.value;
+		}
+		root = root->sibling->sibling;
+		newStrc->member = DefList(root);
+		if(newStrc->name != '0'){
+			/* TODO: Check and insert(or not) */
+		}
+		else
+			return type;
+	}
+	else if(strcmp(root->lexeme.type, "Tag") == 0){
+		Structure strcChecker = getStruct(root->child->lexeme.value);
+		if(strcChecker == NULL) {
+			printf("Error type 17 at Line %d: Undefined structure \"%s\".\n",root->lexeme.linenum, root->child->lexeme.value);
+			return NULL;
+		}
+		else {
+			Type type = (Type)malloc(sizeof(struct Type_));
+			type->kind = STRUCTURE;
+			type->u.structure = strcChecker;
+			return type;
+		}
+	}
 }
 
 /* Declarators */
@@ -116,7 +179,7 @@ FieldList VarDec(Type type, Node *root) {
 		/* Case for production: VarDec -> ID */
 
 		/* Get ID and insert into symbol table */
-		FieldList newVar = (FieldList)malloc(sizeof(FieldList));
+		FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
 		newVar->name = root->child->lexeme.value;
 		/* XXX: make sure variable 'type' here will not be freed */
 		newVar->type = type;
@@ -157,14 +220,14 @@ FieldList VarDec(Type type, Node *root) {
 FieldList FunDec(Type type, Node *root) {
     /* XXX: Here "type" should be the type of retVal */
     /* XXX: It should be "sizeof(FieldList_)" */
-	FieldList newVar = (FieldList)malloc(sizeof(FieldList_));
+	FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
 	/* Set the ID first */
 	newVar->name = root->child->lexeme.value;
-    newVar->type = (Type)malloc(sizeof(Type_));
+    newVar->type = (Type)malloc(sizeof(struct Type_));
     newVar->type->kind = FUNCTION;
-    Function newFunc = (Function)malloc(sizeof(Function_));
+    Function newFunc = (Function)malloc(sizeof(struct Function_));
     newVar->type->u.function = newFunc;
-    newFunc->isDeclare = 1;
+    newFunc->isDeclared = 1;
     newFunc->isDefined = 0;
     newFunc->retVal = type;
 	root = root->child->sibling->sibling;
@@ -175,39 +238,36 @@ FieldList FunDec(Type type, Node *root) {
 	} else {
 		/* Case for production: FunDec -> ID LP VarList RP */
 		/* VarList() should return a FieldList */
-		newFunc->parameters = VarList(root);
+		FieldList listHead = (FieldList)malloc(sizeof(struct FieldList_));
+		listHead->tail = NULL;
+		VarList(listHead, root);
+		newFunc->parameters = listHead->tail;
+		free(listHead);
 		return newVar;
 	}
 }
 
-/* XXX: VarList() and ParamDec() needs to rewrite */
-void VarList(Type type, Node *root) {
-	ParamDec(type, root->child);
+void VarList(FieldList list, Node *root) {
+	FieldList newParam = ParamDec(root->child);
 	root = root->child->sibling;
+	FieldList tmp = list;
+	while(tmp->tail != NULL)
+		tmp = tmp->tail;
+	tmp->tail = newParam;
 	if (root == NULL) {
 		/* Case for production: VarList -> ParamDec */
-		return;
+		return ;
 	} else {
 		/* Case for production: VarList -> ParamDec COMMA VarList*/
-		return VarList(type, root->sibling);
+		VarList(list, root);
 	}
 }
 
-void ParamDec(Type type, Node *root) {
+FieldList ParamDec(Node *root) {
 	Type paramType = Specifier(root->child);
 	root = root->child->sibling;
 	FieldList newParam = VarDec(paramType, root);
-	/* Add this into the parameter list */
-	FieldList list = type->u.function->parameters;
-	if (list == NULL) {
-		/* First parameter */
-		list = newParam;
-	} else {
-		while (list->tail != NULL) {
-			list = list->tail;
-		}
-		list->tail = newParam;
-	}
+	return newParam;
 }
 
 /* Stataments */

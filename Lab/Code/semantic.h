@@ -48,7 +48,7 @@ Type Specifier(Node *root);
 Type StructSpecifer(Node *root);
 
 /* Declarators */
-FieldList VarList(Type type, Node *root);
+FieldList VarList(FieldList type, Node *root);
 FieldList FunDec(Type type, Node *root);
 void ParamDec(Type type, Node *root);
 
