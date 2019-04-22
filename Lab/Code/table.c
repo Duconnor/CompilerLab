@@ -27,7 +27,7 @@ int putVar(FieldList var){
         FieldList tmp = varTable[hashCode];
         for(; tmp->tail != NULL; tmp = tmp->tail)
             /* XXX: Var and Func can have the same name */
-            if(strcmp(tmp->name, var->name) == 0 && tmp->type->kind == var->type->kind)
+            if(strcmp(tmp->name, var->name) == 0 && (tmp->type->kind < 3) == (var->type->kind < 3))
                 return -1;
         if(strcmp(tmp->name, var->name) == 0)
             return -1;
@@ -60,7 +60,7 @@ FieldList getVar(char* name, int kind){
 	while (head != NULL) {
 		/* Check one by one to see if we get a hit! */
         /* XXX: We should consider the kind of Variable */
-		if (strcmp(head->name, name) == 0 && head->type->kind == kind)
+		if (strcmp(head->name, name) == 0 && (head->type->kind < 3) == (kind < 3))
 			return head;
 		else
 			head = head->tail;
