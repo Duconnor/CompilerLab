@@ -57,6 +57,11 @@ void CompSt(Type type, Node *root);
 void StmtList(Type type, Node *root);
 void Stmt(Type type, Node *root);
 
+/* Local Definitions */
+FieldList DefList(Node *root, int isStructure);
+FieldList Def(Node *root, int isStructure);
+FieldList DecList(Type type, Node *root, int isStructure);
+FieldList Dec(Type type, Node *root, int isStructure);
 
 /* Expressions */
 Type Exp(Node *root, int *flag);

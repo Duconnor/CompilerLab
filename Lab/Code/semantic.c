@@ -382,8 +382,15 @@ FieldList Def(Node *root, int isStructure) {
 
 FieldList DecList(Type type, Node *root, int isStructure) {
 	FieldList definition = Dec(type, root->child, isStructure);
-	/* No need to check here, we have done the check at the time we see 'ID' */
-	putVar(definition);
+	/* Check here */
+	FieldList varChecker = getVar(definition->name, 0);
+	Structure strcChecker = getStruct(definition->name);
+	if (varChecker == NULL && strcChecker == NULL) {
+		putVar(definition);
+	} else {
+		printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", root->lexeme.linenum, definition->name);
+		return NULL;
+	}
 	if (root->child->sibling == NULL) {
 		/* Case for production DecList -> Dec */
 		return definition;
