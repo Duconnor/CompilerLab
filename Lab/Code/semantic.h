@@ -57,4 +57,9 @@ void CompSt(Type type, Node *root);
 void StmtList(Type type, Node *root);
 void Stmt(Type type, Node *root);
 
+
+/* Expressions */
+Type Exp(Node *root, int *flag);
+int Args(Node *root, FieldList paramList);
+
 #endif

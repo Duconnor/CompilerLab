@@ -5,7 +5,7 @@
 extern FieldList symbolTable[TABLE_SIZE];
 
 extern int putVar(FieldList var);
-extern putStruct(Structure strc);
+extern int putStruct(Structure strc);
 extern FieldList getVar(char* name, int kind);
 extern Structure getStruct(char* name);
 
@@ -88,26 +88,39 @@ void ExtDef(Node *root) {
                 if(funcChecker->isDefined == 1)
                     printf("Error type 4 at Line %d: Redefined function \"%s\"\n", root->lexeme.linenum, funcVar->name);
                 else {
-                    /* TODO: Check if there are inconsistent declarations */
+                    /* Check if there are inconsistent declarations */
+					if(isEquivalent(funcVar->type, funcVarChecker->type)) {
+						funcChecker->isDefined = 1;
+						return;
+					}
+					else 
+						printf("Error type 19 at Line %d: Inconsistent declaration of function \"%s\"\n", root->lexeme.linenum, funcVar->name);
                 }
             }
         }
         else {
             /* Case for ExtDef -> Specifier FunDec SEMI */
-            /* TODO: Check if there are inconsistent declarations */
+			FieldList funcVarChecker = getVar(funcVar->name, funcVar->type->kind);
+			if(funcVarChecker == NULL)
+				putVar(funcVar);
+			else {
+				if(isEquivalent(funcVar->type, funcVarChecker->type))
+					return;
+				else
+					printf("Error type 19 at Line %d: Inconsistent declaration of function \"%s\"\n", root->lexeme.linenum, funcVar->name);
+			}
         }
     }    
 }
 
 void ExtDecList(Type type, Node *root) {
     FieldList newVar = VarDec(type, root->child);
-    /* TODO: Check and insert(or not) */
 	FieldList varChecker = getVar(newVar->name, newVar->type->kind);
 	Structure strcChecker = getStruct(newVar->name);
 	if(varChecker == NULL && strcChecker == NULL)
 		putVar(newVar);
 	else 
-		printf("Error type 3 at Line %d: Redefined variable \"%s\"\n");
+		printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", root->lexeme.linenum, newVar->name);
     root = root->child->sibling;
     if(root == NULL)
         /* Case for ExtDecList -> VarDec */
@@ -157,9 +170,23 @@ Type StructSpecifer(Node *root) {
 			newStrc->name = root->child->lexeme.value;
 		}
 		root = root->sibling->sibling;
+<<<<<<< HEAD
 		newStrc->member = DefList(root, 1);
 			/* TODO: Check and insert(or not) */
 		return type;			
+=======
+		newStrc->member = DefList(root);
+		/* TODO: Check and insert(or not) */
+		FieldList varChecker = getVar(newStrc->name, 0);
+		Structure strcChecker = getStruct(newStrc->name);
+		if(varChecker == NULL && strcChecker == NULL) {
+			putStruct(newStrc);
+			return type;
+		} else {
+			printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", root->lexeme.linenum, newStrc->name);
+			return NULL;
+		}			
+>>>>>>> lzk
 	}
 	else if(strcmp(root->lexeme.type, "Tag") == 0){
 		Structure strcChecker = getStruct(root->child->lexeme.value);
@@ -394,5 +421,192 @@ FieldList Dec(Type type, Node *root, int isStructure) {
 			}
 		}
 		return newVar;
+	}
+}
+
+/* Expressions */
+Type Exp(Node *root, int *flag) {
+	if(strcmp(root->child->lexeme.type, "Exp") == 0) {
+		if(strcmp(root->child->sibling->lexeme.type, "ASSIGNOP") == 0){
+			/* Case for production: Exp -> Exp ASSIGNOP Exp */
+			*flag = 1;
+			int leftFlag = 0, rightFlag = 0;
+			Type leftExp = Exp(root->child, &leftFlag);
+			Type rightExp = Exp(root->child->sibling->sibling, &rightFlag);
+			if(leftFlag == 1) {
+				printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable.\n", root->lexeme.linenum);
+				return NULL;
+			}
+			if(isEquivalent(leftExp, rightExp))
+				return leftExp;
+			else {
+				printf("Error type 5 at Line %d: Type mismatched for assignment.\n", root->lexeme.linenum);
+				return NULL;
+			}
+		}
+		else if(strcmp(root->child->sibling->lexeme.type, "AND") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "OR") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "RELOP") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "PLUS") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "MINUS") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "STAR") == 0
+				|| strcmp(root->child->sibling->lexeme.type, "DIV") == 0) {
+			/* Case for production: Exp -> Exp AND/OR/RELOP/PLUS/MINUS/STAR/DIV Exp */
+			int leftFlag = 0, rightFlag = 0;
+			Type leftExp = Exp(root->child, leftFlag);
+			Type rightExp = Exp(root->child->sibling->sibling, rightFlag);
+			if(isEquivalent(leftExp, rightExp) && leftExp->kind == BASIC) {
+				/* This is a RIGHT-VALUE */
+				*flag = 1;
+				/* Return either type */
+				return leftExp; 
+			} else {
+				printf("Error type 7 at Line %d: Type mismatched for operands.\n", root->lexeme.linenum);
+				return NULL;
+			}
+		}
+		else if(strcmp(root->child->sibling->lexeme.type, "LB") == 0) {
+			/* Case for production: Exp -> Exp LB Exp RB */
+			int tmpFlag = 0;
+			Type arrayType = Exp(root->child, &tmpFlag);
+			if(arrayType == NULL)
+				return NULL;
+			if(arrayType->kind != ARRAY) {
+				printf("Error type 10 at Line %d: \"%s\" is not an array.\n", root->child->lexeme.linenum, root->child->lexeme.value);
+				return NULL;
+			}
+			root = root->child->sibling->sibling;
+			Type indexType = Exp(root, &tmpFlag);
+			if(indexType == NULL)
+				return NULL;
+			if(indexType->kind != BASIC || indexType->u.basic != 0) {
+				printf("Error type 12 at Line %d: \"%s\" is not an integer.\n", root->lexeme.linenum, root->lexeme.value);
+				return NULL;
+			}
+			return arrayType->u.array.elem;
+		}
+		else if(strcmp(root->child->sibling->lexeme.type, "DOT") == 0) {
+			/* Case for production: Exp -> Exp DOT ID */
+			int tmpFlag = 0;
+			Type strcType = Exp(root->child, &tmpFlag);
+			if(strcType == NULL)
+				return NULL;
+			if(strcType->kind != STRUCTURE) {
+				printf("Error type 13 at Line %d: Illegal use of \".\".\n", root->child->lexeme.linenum);
+				return NULL;
+			} 
+			FieldList memberList = strcType->u.structure->member;
+			root = root->child->sibling->sibling;
+			char *memberName = root->lexeme.value;
+			while(memberList != NULL) {
+				if(strcmp(memberName, memberList->name) == 0) 
+					return memberList->type;
+				memberList = memberList->tail;
+			}
+			printf("Error type 14 at Line %d: Non-existent field \"%s\".\n", root->lexeme.linenum, root->lexeme.value);
+			return NULL;
+		}
+	}
+	else if(strcmp(root->child->lexeme.type, "LP") == 0) {
+		/* Case for production: Exp -> LP Exp RP */
+		*flag = 1;
+		return Exp(root->child->child, flag);
+	}
+	else if(strcmp(root->child->lexeme.type, "MINUS") == 0) {
+		/* Case for production: Exp -> MINUS Exp */
+		*flag = 1;
+		Type type = Exp(root->child->sibling, flag);
+		if(type == NULL) 
+			return NULL;
+		if(type->kind != BASIC || type->u.basic != 0) {
+			printf("Error type 7 at Line %d: Type mismatched for operands.\n", root->lexeme.linenum);
+			return NULL;
+		}
+		return type;
+	}
+	else if(strcmp(root->child->lexeme.type, "NOT") == 0) {
+		/* Case for production: Exp -> NOT Exp */
+		*flag = 1;
+		Type type = Exp(root->child->sibling, flag);
+		if(type == NULL) 
+			return NULL;
+		if(type->kind != BASIC || type->u.basic != 0) {
+			printf("Error type 7 at Line %d: Type mismatched for operands.\n", root->lexeme.linenum);
+			return NULL;
+		}
+		return type;
+	}
+	else if(strcmp(root->child->lexeme.type, "ID") == 0) {
+		if(root->child->sibling == NULL) {
+			/* Case for production: Exp -> ID */
+			FieldList varChecker = getVar(root->child->lexeme.value, 0);
+			if(varChecker == NULL) {
+				printf("Error type 1 at Line %d: Undefined variable \"%s\".\n", root->child->lexeme.linenum, root->child->lexeme.value);
+				return NULL; 
+			}
+			return varChecker->type;
+		}
+		else {
+			FieldList varChecker = getVar(root->child->lexeme.value, 0);
+			FieldList funcVarChecker = getVar(root->child->lexeme.value, 3);
+			if(varChecker != NULL && funcVarChecker == NULL) {
+				printf("Error type 11 at Line %d: \"%s\" is not a function.\n", root->child->lexeme.linenum, root->child->lexeme.value);
+				return NULL;
+			}
+			if(funcVarChecker == NULL || funcVarChecker->type->u.function->isDefined == 0) {
+				printf("Error type 2 at Line %d: Undefined function \"%s\".\n", root->child->lexeme.linenum, root->child->lexeme.value);
+				return NULL;
+			}
+			FieldList paramList = funcVarChecker->type->u.function->parameters;
+			root = root->child->sibling->sibling;
+			if(strcmp(root->lexeme.type, "RP") == 0) {
+				/* Case for production: Exp -> ID LP RP */
+				if(paramList != NULL) {
+					printf("Error type 9 at Line %d: Function \"%s\" is not applicable for arguments.\n", root->lexeme.linenum, funcVarChecker->name);
+					return NULL;
+				}
+			}
+			else {
+				/* Case for production: Exp -> ID LP Args RP */
+				if(Args(root, paramList) != 0) {
+					printf("Error type 9 at Line %d: Function \"%s\" is not applicable for arguments.\n", root->lexeme.linenum, funcVarChecker->name);
+					return NULL;
+				}
+			}
+			*flag = 1;
+			return funcVarChecker->type->u.function->retVal;
+		}
+	}
+	else if(strcmp(root->child->lexeme.type, "INT") == 0) {
+		/* Case for production: Exp -> INT */
+		Type type = (Type)malloc(sizeof(struct Type_));
+		type->kind = BASIC;
+		type->u.basic = 0;
+		*flag = 1;
+		return type;
+	}
+	else if(strcmp(root->child->lexeme.type, "FLOAT") == 0) {
+		/* Case for production: Exp -> FLOAT */
+		Type type = (Type)malloc(sizeof(struct Type_));
+		type->kind = BASIC;
+		type->u.basic = 1;
+		*flag = 1;
+		return type;
+	}
+}
+
+int Args(Node *root, FieldList paramList) {
+	if(paramList == NULL)
+		return 1;
+	int flag = 0;
+	root = root->child;
+	Type thisParam = Exp(root, &flag);
+	if(isEquivalent(thisParam, paramList->type)) {
+		if(root->sibling == NULL)
+			return 0;
+		else {
+			root = root->sibling;
+			return Args(root, paramList->tail);
+		}
 	}
 }

@@ -70,6 +70,12 @@ ExtDef : Specifier ExtDecList SEMI {
         addChild($$, $2);
         addChild($$, $3);
     }
+    | Specifier FunDec SEMI {
+        $$ = initNode("ExtDef", " ", @$.first_line);
+        addChild($$, $1);
+        addChild($$, $2);
+        addChild($$, $3);
+    }
     | error SEMI{
         bErrorFree = 0;
     }

@@ -25,8 +25,13 @@ int main(int argc, char **argv) {
 		yylineno = 1;
 		yyrestart(file);
 		yyparse();
-		if(aErrorFree && bErrorFree)
-			printTree(tree);
+
+		initTable();
+		
+		if(aErrorFree && bErrorFree) {
+			//printTree(tree);
+			Program(tree);
+		}
 		destroyTree(tree);
 
 		return 0;
