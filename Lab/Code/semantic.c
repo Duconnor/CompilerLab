@@ -302,6 +302,18 @@ FieldList ParamDec(Node *root) {
 	Type paramType = Specifier(root->child);
 	root = root->child->sibling;
 	FieldList newParam = VarDec(paramType, root);
+
+	/* Insert newParam into the symbol table */
+	FieldList varChecker = getVar(newParam->name, newParam->type->kind);
+	Structure strcChecker = getStruct(newParam->name);
+	if (varChecker == NULL && strcChecker == NULL) {
+		/* Now we are safe to insert the value into the symbol table */
+		putVar(newParam);
+	} else {
+		printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", root->lexeme.linenum, newParam->name);
+		return NULL;
+	}
+
 	return newParam;
 }
 

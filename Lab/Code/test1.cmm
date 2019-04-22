@@ -1,0 +1,9 @@
+int inc(int x) {
+	x = x + 1;
+	return x;	
+}
+int main() {
+	int a = 1;
+	a = inc(a);
+	return 0;
+}

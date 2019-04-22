@@ -35,8 +35,13 @@ void addChild(Node *parent, Node *child) {
 	}
 }
 
+static int isEpsilonProduction(Node *root) {
+	char *type = root->lexeme.type;
+	return root->child == NULL && (strcmp(type, "ExtDefList") == 0 || strcmp(type, "OptTag") == 0 || strcmp(type, "StmtList") == 0 || strcmp(type, "DefList") == 0);
+}
+
 static void printTreeRec(Node *root, int height) {
-	if (root == NULL || root->child == NULL)
+	if (root == NULL || isEpsilonProduction(root))
 		return;
 	for (int i = 0; i < height; i++)
 		printf("  ");
