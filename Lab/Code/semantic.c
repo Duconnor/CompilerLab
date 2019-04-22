@@ -88,13 +88,27 @@ void ExtDef(Node *root) {
                 if(funcChecker->isDefined == 1)
                     printf("Error type 4 at Line %d: Redefined function \"%s\"\n", root->lexeme.linenum, funcVar->name);
                 else {
-                    /* TODO: Check if there are inconsistent declarations */
+                    /* Check if there are inconsistent declarations */
+					if(isEquivalent(funcVar->type, funcVarChecker->type)) {
+						funcChecker->isDefined = 1;
+						return;
+					}
+					else 
+						printf("Error type 19 at Line %d: Inconsistent declaration of function \"%s\"\n", root->lexeme.linenum, funcVar->name);
                 }
             }
         }
         else {
             /* Case for ExtDef -> Specifier FunDec SEMI */
-            /* TODO: Check if there are inconsistent declarations */
+			FieldList funcVarChecker = getVar(funcVar->name, funcVar->type->kind);
+			if(funcVarChecker == NULL)
+				putVar(funcVar);
+			else {
+				if(isEquivalent(funcVar->type, funcVarChecker->type))
+					return;
+				else
+					printf("Error type 19 at Line %d: Inconsistent declaration of function \"%s\"\n", root->lexeme.linenum, funcVar->name);
+			}
         }
     }    
 }
@@ -519,7 +533,7 @@ int Args(Node *root, FieldList paramList) {
 	int flag = 0;
 	root = root->child;
 	Type thisParam = Exp(root, &flag);
-	if(isEquivalent(thisParam, paramList->type) == 0) {
+	if(isEquivalent(thisParam, paramList->type)) {
 		if(root->sibling == NULL)
 			return 0;
 		else {
