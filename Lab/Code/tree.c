@@ -36,7 +36,7 @@ void addChild(Node *parent, Node *child) {
 }
 
 static void printTreeRec(Node *root, int height) {
-	if (root == NULL)
+	if (root == NULL || root->child == NULL)
 		return;
 	for (int i = 0; i < height; i++)
 		printf("  ");

@@ -29,7 +29,8 @@ int main(int argc, char **argv) {
 		initTable();
 		
 		if(aErrorFree && bErrorFree) {
-			//printTree(tree);
+			printTree(tree);
+			printf("\n");
 			Program(tree);
 		}
 		destroyTree(tree);

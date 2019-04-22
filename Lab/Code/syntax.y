@@ -51,7 +51,7 @@ ExtDefList : ExtDef ExtDefList {
         addChild($$, $1);
         addChild($$, $2);
     }
-    | /* empty */ { $$ = NULL; }
+    | /* empty */ { $$ = initNode("DefList", " ", @$.first_line); }
     ;
 ExtDef : Specifier ExtDecList SEMI {
         $$ = initNode("ExtDef", " ", @$.first_line);
@@ -80,6 +80,7 @@ ExtDef : Specifier ExtDecList SEMI {
         bErrorFree = 0;
     }
     ;
+
 ExtDecList : VarDec {
         $$ = initNode("ExtDecList", " ", @$.first_line);
         addChild($$, $1);
@@ -120,7 +121,7 @@ OptTag : ID {
         $$ = initNode("OptTag", " ", @$.first_line);
         addChild($$, $1);
     }
-    | /* empty */ { $$ = NULL; }
+    | /* empty */ { $$ = initNode("OptTag", " ", @$.first_line); }
     ;
 Tag : ID {
         $$ = initNode("Tag", " ", @$.first_line);
@@ -161,11 +162,9 @@ VarList : ParamDec COMMA VarList {
         addChild($$, $2);
         addChild($$, $3);
     }
-    | ID LP RP {
+    | ParamDec {
         $$ = initNode("VarList", " ", @$.first_line);
         addChild($$, $1);
-        addChild($$, $2);
-        addChild($$, $3);
     }
     ;
 ParamDec : Specifier VarDec {
@@ -192,7 +191,7 @@ StmtList : Stmt StmtList {
         addChild($$, $1);
         addChild($$, $2);
     }
-    | /* empty */ { $$ = NULL; }
+    | /* empty */ { $$ = initNode("StmtList", " ", @$.first_line); }
     ;
 Stmt : Exp SEMI {
         $$ = initNode("Stmt", " ", @$.first_line);
@@ -249,7 +248,7 @@ DefList : Def DefList {
         addChild($$, $1);
         addChild($$, $2);
     }
-    | /* empty */ { $$ = NULL; }
+    | /* empty */ { $$ = initNode("DefList", " ", @$.first_line); }
     ;
 Def : Specifier DecList SEMI {
         $$ = initNode("Def", " ", @$.first_line);
