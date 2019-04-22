@@ -157,7 +157,7 @@ Type StructSpecifer(Node *root) {
 			newStrc->name = root->child->lexeme.value;
 		}
 		root = root->sibling->sibling;
-		newStrc->member = DefList(root);
+		newStrc->member = DefList(root, 1);
 			/* TODO: Check and insert(or not) */
 		return type;			
 	}
@@ -276,7 +276,7 @@ FieldList ParamDec(Node *root) {
 /* Stataments */
 void CompSt(Type type, Node *root) {
 	/* XXX: might need some change here */
-	DefList(root->child->sibling);
+	DefList(root->child->sibling, 0);
 
 	StmtList(type, root->child->sibling->sibling);
 }
@@ -294,21 +294,24 @@ void StmtList(Type type, Node *root) {
 
 void Stmt(Type type, Node *root) {
 	root = root->child;
+	int flag = 0;
 	if (strcmp(root->lexeme.type, "Exp")) {
 		/* Case for production: Stmt -> Exp SEMI */
-		Exp(root);
+		Exp(root, &flag);
 	} else if (strcmp(root->lexeme.type, "CompSt")) {
 		/* Case for production: Stmt -> CompSt*/
 		Type emptyType = NULL;
 		CompSt(emptyType, root);
 	} else if (strcmp(root->lexeme.type, "RETURN")) {
 		/* Case for production: Stmt -> RETURN Exp SEMI */
-		Type expType = Exp(root);
-		assert(isEquivalent(expType, type));
+		Type expType = Exp(root, &flag);
+		//assert(isEquivalent(expType, type));
+		printf("Error type 8 at Line %d: Type mismatched for return.\n", root->lexeme.linenum);
+		/* XXX: Need return here? */
 	} else if (strcmp(root->lexeme.type, "IF")) {
 		/* Case for production: Stmt -> IF LP Exp RP XX */
 		root = root->sibling->sibling;
-		Type expType = Exp(root);
+		Type expType = Exp(root, &flag);
 		/* expType can only be int */
 		/* XXX: Assume basic = 0 means 'int' here*/
 		assert(expType->kind == BASIC && expType->u.basic == 0);
@@ -326,11 +329,70 @@ void Stmt(Type type, Node *root) {
 	} else {
 		/* Case for production: Stmt -> WHILE LP Exp RP Stmt */
 		root = root->sibling->sibling;
-		Type expType = Exp(root);
+		Type expType = Exp(root, &flag);
 		/* expType can only be int */
 		/* XXX: Assume basic = 0 means 'int' here*/
 		assert(expType->kind == BASIC && expType->u.basic == 0);
 		root = root->sibling->sibling;
 		Stmt(type, root);
+	}
+}
+
+FieldList DefList(Node *root, int isStructure) {
+	if (root->child != NULL) {
+		/* Case for production: DefList -> Def DefList */
+		FieldList definitions = Def(root->child, isStructure);
+		/* Find the end of list 'definitions' */
+		FieldList ptr = definitions;
+		while (ptr != NULL && ptr->tail != NULL) {
+			ptr = ptr->tail;
+		}
+		ptr->tail = DefList(root->child->sibling, isStructure);
+		return definitions;
+	} else {
+		/* Case for production: DefList -> epsilon */
+		return NULL;
+	}
+}
+
+FieldList Def(Node *root, int isStructure) {
+	Type type = Specifier(root->child);
+	return DecList(type, root->child->sibling, isStructure);
+}
+
+FieldList DecList(Type type, Node *root, int isStructure) {
+	FieldList definition = Dec(type, root->child, isStructure);
+	/* No need to check here, we have done the check at the time we see 'ID' */
+	putVar(definition);
+	if (root->child->sibling == NULL) {
+		/* Case for production DecList -> Dec */
+		return definition;
+	} else {
+		/* Case for production DecList -> Dec COMMA DecList */
+		FieldList restVars = DecList(type, root->child->sibling->sibling, isStructure);
+		definition->tail = restVars;
+		return definition;
+	}
+}
+
+FieldList Dec(Type type, Node *root, int isStructure) {
+	FieldList newVar = VarDec(type, root->child);
+	if (root->child->sibling == NULL) {
+		/* Case for production Dec -> VarDec */
+		return newVar;
+	} else {
+		/* Case for production Dec -> VarDec ASSIGNOP Exp */
+		if (isStructure) {
+			printf("Error type 15 at Line %d: Multiple definition or initializing a field when defining a structure.\n", root->child->sibling->lexeme.linenum);
+			return NULL;
+		} else {
+			int flag = 0;
+			Type expType = Exp(root->child->sibling->sibling, &flag);
+			if (!isEquivalent(type, expType)) {
+				printf("Error type 5 at Line %d: Type mismatched for assignment.\n", root->child->sibling->lexeme.linenum);
+				return NULL;
+			}
+		}
+		return newVar;
 	}
 }
