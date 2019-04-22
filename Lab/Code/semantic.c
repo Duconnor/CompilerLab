@@ -170,13 +170,7 @@ Type StructSpecifer(Node *root) {
 			newStrc->name = root->child->lexeme.value;
 		}
 		root = root->sibling->sibling;
-<<<<<<< HEAD
 		newStrc->member = DefList(root, 1);
-			/* TODO: Check and insert(or not) */
-		return type;			
-=======
-		newStrc->member = DefList(root);
-		/* TODO: Check and insert(or not) */
 		FieldList varChecker = getVar(newStrc->name, 0);
 		Structure strcChecker = getStruct(newStrc->name);
 		if(varChecker == NULL && strcChecker == NULL) {
@@ -186,7 +180,6 @@ Type StructSpecifer(Node *root) {
 			printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", root->lexeme.linenum, newStrc->name);
 			return NULL;
 		}			
->>>>>>> lzk
 	}
 	else if(strcmp(root->lexeme.type, "Tag") == 0){
 		Structure strcChecker = getStruct(root->child->lexeme.value);
