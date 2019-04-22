@@ -1,8 +1,8 @@
 #include "semantic.h"
 #include <stdio.h>
 #include <string.h>
-
-extern FieldList symbolTable[TABLE_SIZE];
+#include <assert.h>
+#include <stdlib.h>
 
 extern int putVar(FieldList var);
 extern int putStruct(Structure strc);
@@ -65,7 +65,7 @@ void ExtDefList(Node *root) {
 void ExtDef(Node *root) {
     Node *SpcNode = root->child;
     Type type = Specifier(SpcNode);
-    Node *root = SpcNode->sibling;
+    root = SpcNode->sibling;
     if(strcmp(root->lexeme.type, "SEMI"))
         /* Case for ExtDef -> Specifier SEMI */
         return;
@@ -453,8 +453,8 @@ Type Exp(Node *root, int *flag) {
 				|| strcmp(root->child->sibling->lexeme.type, "DIV") == 0) {
 			/* Case for production: Exp -> Exp AND/OR/RELOP/PLUS/MINUS/STAR/DIV Exp */
 			int leftFlag = 0, rightFlag = 0;
-			Type leftExp = Exp(root->child, leftFlag);
-			Type rightExp = Exp(root->child->sibling->sibling, rightFlag);
+			Type leftExp = Exp(root->child, &leftFlag);
+			Type rightExp = Exp(root->child->sibling->sibling, &rightFlag);
 			if(isEquivalent(leftExp, rightExp) && leftExp->kind == BASIC) {
 				/* This is a RIGHT-VALUE */
 				*flag = 1;

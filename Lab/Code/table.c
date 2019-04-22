@@ -1,4 +1,5 @@
 #include "table.h"
+#include "semantic.h"
 #include <string.h>
 
 FieldList varTable[TABLE_SIZE]; 

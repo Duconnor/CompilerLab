@@ -5,8 +5,16 @@
 #ifndef TABLE_H
 #define TABLE_H
 
-#include "tree.h"
-#include "semantic.h"
+
+struct Type_;
+struct FieldList_;
+struct Structure_;
+struct Function_;
+
+typedef struct Type_* Type;
+typedef struct FieldList_* FieldList;
+typedef struct Structure_* Structure;
+typedef struct Function_* Function;
 
 #define TABLE_SIZE 1024
 

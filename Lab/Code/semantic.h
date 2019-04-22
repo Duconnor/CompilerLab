@@ -1,7 +1,7 @@
 #ifndef SEMANTIC_H
 #define SEMANTIC_H
 
-#include "table.h"
+#include "tree.h"
 
 typedef struct Type_* Type;
 typedef struct FieldList_* FieldList;
@@ -48,9 +48,10 @@ Type Specifier(Node *root);
 Type StructSpecifer(Node *root);
 
 /* Declarators */
-FieldList VarList(FieldList type, Node *root);
+FieldList VarDec(Type type, Node *root);
 FieldList FunDec(Type type, Node *root);
-void ParamDec(Type type, Node *root);
+void VarList(FieldList list, Node *root);
+FieldList ParamDec(Node *root);
 
 /* Statements */
 void CompSt(Type type, Node *root);
