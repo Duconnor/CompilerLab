@@ -468,6 +468,8 @@ Type Exp(Node *root, int *flag) {
 			int leftFlag = 0, rightFlag = 0;
 			Type leftExp = Exp(root->child, &leftFlag);
 			Type rightExp = Exp(root->child->sibling->sibling, &rightFlag);
+			if(leftExp == NULL || rightExp == NULL)
+				return NULL;
 			if(leftFlag == 1) {
 				printf("Error type 6 at Line %d: The left-hand side of an assignment must be a variable.\n", root->lexeme.linenum);
 				return NULL;
@@ -490,6 +492,8 @@ Type Exp(Node *root, int *flag) {
 			int leftFlag = 0, rightFlag = 0;
 			Type leftExp = Exp(root->child, &leftFlag);
 			Type rightExp = Exp(root->child->sibling->sibling, &rightFlag);
+			if(leftExp == NULL || rightExp == NULL)
+				return NULL;
 			if(isEquivalent(leftExp, rightExp) && leftExp->kind == BASIC) {
 				/* This is a RIGHT-VALUE */
 				*flag = 1;
