@@ -16,6 +16,7 @@ struct Type_ {
         Structure structure;
         Function function;
     } u;
+	char* funcName; /* This field is only valid when Type_ is pointing to a paramter */
 };
 
 struct FieldList_ {
@@ -50,8 +51,8 @@ Type StructSpecifer(Node *root);
 /* Declarators */
 FieldList VarDec(Type type, Node *root);
 FieldList FunDec(Type type, Node *root);
-void VarList(FieldList list, Node *root);
-FieldList ParamDec(Node *root);
+void VarList(FieldList list, Node *root, char *name);
+FieldList ParamDec(Node *root, char *name);
 
 /* Statements */
 void CompSt(Type type, Node *root);

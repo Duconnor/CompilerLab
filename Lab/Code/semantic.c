@@ -6,8 +6,12 @@
 
 extern int putVar(FieldList var);
 extern int putStruct(Structure strc);
+extern int putField(FieldList fieldVar);
 extern FieldList getVar(char* name, int kind);
 extern Structure getStruct(char* name);
+extern FieldList getFieldVar(char* name);
+
+extern void clearFieldTable();
 
 static char strcName[3] = "00";
 
@@ -177,6 +181,7 @@ Type StructSpecifer(Node *root) {
 			/* Case for production: OptTag -> ID */
 			newStrc->name = root->child->lexeme.value;
 		}
+		Node *tempRoot = root;
 		root = root->sibling->sibling;
 		newStrc->member = DefList(root, 1);
 		FieldList varChecker = getVar(newStrc->name, 0);
@@ -185,7 +190,7 @@ Type StructSpecifer(Node *root) {
 			putStruct(newStrc);
 			return type;
 		} else {
-			printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", root->lexeme.linenum, newStrc->name);
+			printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", tempRoot->lexeme.linenum, newStrc->name);
 			return NULL;
 		}			
 	}
@@ -272,7 +277,7 @@ FieldList FunDec(Type type, Node *root) {
 		/* VarList() should return a FieldList */
 		FieldList listHead = (FieldList)malloc(sizeof(struct FieldList_));
 		listHead->tail = NULL;
-		VarList(listHead, root);
+		VarList(listHead, root, newVar->name);
 		newFunc->parameters = listHead->tail;
 		free(listHead);
 		printf("FunDec ends\n");
@@ -280,9 +285,9 @@ FieldList FunDec(Type type, Node *root) {
 	}
 }
 
-void VarList(FieldList list, Node *root) {
+void VarList(FieldList list, Node *root, char *name) {
 	printf("VarList\n");
-	FieldList newParam = ParamDec(root->child);
+	FieldList newParam = ParamDec(root->child, name);
 	root = root->child->sibling;
 	FieldList tmp = list;
 	while(tmp->tail != NULL)
@@ -293,15 +298,16 @@ void VarList(FieldList list, Node *root) {
 		return ;
 	} else {
 		/* Case for production: VarList -> ParamDec COMMA VarList*/
-		VarList(list, root->sibling);
+		VarList(list, root->sibling, name);
 	}
 }
 
-FieldList ParamDec(Node *root) {
+FieldList ParamDec(Node *root, char *name) {
 	printf("ParamDec\n");
 	Type paramType = Specifier(root->child);
 	root = root->child->sibling;
 	FieldList newParam = VarDec(paramType, root);
+	newParam->type->funcName = name;
 
 	/* Insert newParam into the symbol table */
 	FieldList varChecker = getVar(newParam->name, newParam->type->kind);
@@ -310,6 +316,8 @@ FieldList ParamDec(Node *root) {
 		/* Now we are safe to insert the value into the symbol table */
 		putVar(newParam);
 	} else {
+		if (varChecker != NULL && strcmp(varChecker->type->funcName, name) == 0)
+			return newParam;
 		printf("Error type 3 at Line %d: Redefined variable \"%s\"\n", root->lexeme.linenum, newParam->name);
 		return NULL;
 	}
@@ -405,9 +413,12 @@ FieldList DefList(Node *root, int isStructure) {
 			ptr = ptr->tail;
 		}
 		ptr->tail = DefList(root->child->sibling, isStructure);
+		/* Clear the field table, whether we use it or not */
+		clearFieldTable();
 		return definitions;
 	} else {
 		/* Case for production: DefList -> epsilon */
+		clearFieldTable();
 		return NULL;
 	}
 }
@@ -429,10 +440,15 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 	printf("Here:%s\n", definition->name);
 	FieldList varChecker = getVar(definition->name, 0);
 	Structure strcChecker = getStruct(definition->name);
-	if (varChecker == NULL && strcChecker == NULL) {
+	FieldList fieldChecker = getFieldVar(definition->name);
+	if (varChecker == NULL && strcChecker == NULL && fieldChecker == NULL) {
+		putField(definition);
 		putVar(definition);
 	} else {
-		printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
+		if (!isStructure)
+			printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
+		else
+			printf("Error type 15 at Line %d: Redefined field \"%s\".\n", root->lexeme.linenum, definition->name);
 		return NULL;
 	}
 	if (root->child->sibling == NULL) {
