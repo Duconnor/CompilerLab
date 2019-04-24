@@ -30,12 +30,12 @@ static int isEquivalent(Type this, Type that) {
 		} else {
 			/* For function, we need to consider return type and its parameters */
 			int isRetTypeEquivalent = isEquivalent(this->u.function->retVal, that->u.function->retVal);
+			printf("%d\n",isRetTypeEquivalent);
 			int isParametersEquivalent = 1;
 			FieldList thisList = this->u.function->parameters;
 			FieldList thatList = that->u.function->parameters;
 			while (thisList != NULL && thatList != NULL) {
-				if (strcmp(thisList->name, thatList->name) != 0 ||
-				!isEquivalent(thisList->type, thatList->type)) {
+				if (!isEquivalent(thisList->type, thatList->type)) {
 					isParametersEquivalent = 0;
 					break;
 				}
@@ -548,7 +548,7 @@ Type Exp(Node *root, int *flag) {
 			if(indexType == NULL)
 				return NULL;
 			if(indexType->kind != BASIC || indexType->u.basic != 0) {
-				printf("Error type 12 at Line %d: \"%s\" is not an integer.\n", root->lexeme.linenum, root->lexeme.value);
+				printf("Error type 12 at Line %d: \"%s\" is not an integer.\n", root->lexeme.linenum, root->child->lexeme.value);
 				return NULL;
 			}
 			return arrayType->u.array.elem;
