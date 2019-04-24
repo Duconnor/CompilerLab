@@ -1,4 +1,5 @@
 #include "semantic.h"
+#include "table.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -12,6 +13,8 @@ extern Structure getStruct(char* name);
 extern FieldList getFieldVar(char* name);
 
 extern void clearFieldTable();
+
+extern FieldList varTable[TABLE_SIZE];
 
 static char strcName[3] = "00";
 
@@ -50,10 +53,27 @@ static int isEquivalent(Type this, Type that) {
 	}
 }
 
+static void findAllIncomplete() {
+	for (int i = 0; i < TABLE_SIZE; i++) {
+		FieldList term = varTable[i];
+		/* Check one by one for incomplete function definition */
+		while (term != NULL) {
+			if (term->type->kind == FUNCTION) {
+				/* Check if it is only declared */
+				if (term->type->u.function->isDefined == 0) {
+                    printf("Error type 18 at Line %d: Undefined function \"%s\"\n", term->type->u.function->linenum, term->name);
+				}
+			}
+			term = term->tail;
+		}
+	}
+}
+
 /* High-level Definitions */
 void Program(Node *root) {
 	printf("Program\n");
     ExtDefList(root->child);
+	findAllIncomplete();
 }
 
 void ExtDefList(Node *root) {
@@ -264,6 +284,7 @@ FieldList FunDec(Type type, Node *root) {
     Function newFunc = (Function)malloc(sizeof(struct Function_));
     newVar->type->u.function = newFunc;
     newFunc->isDeclared = 1;
+	newFunc->linenum = root->lexeme.linenum;
     newFunc->isDefined = 0;
     newFunc->retVal = type;
 	root = root->child->sibling->sibling;

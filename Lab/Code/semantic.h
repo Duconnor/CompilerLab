@@ -34,6 +34,7 @@ struct Structure_ {
 struct Function_ {
     int isDeclared;
     int isDefined;
+	int linenum;
     Type retVal;
     FieldList parameters;
 };
