@@ -1,7 +1,7 @@
 struct Position
 {
     float x;
-}
+};
 
 struct Position
 {

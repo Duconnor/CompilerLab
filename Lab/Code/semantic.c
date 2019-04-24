@@ -352,6 +352,8 @@ void Stmt(Type type, Node *root) {
 	} else if (strcmp(root->lexeme.type, "RETURN") == 0) {
 		/* Case for production: Stmt -> RETURN Exp SEMI */
 		Type expType = Exp(root->sibling, &flag);
+		if(expType == NULL)
+			return;
 		//printf("%d %d\n",expType->kind, type->kind);
 		if(!isEquivalent(expType, type->u.function->retVal))
 			printf("Error type 8 at Line %d: Type mismatched for return.\n", root->lexeme.linenum);
@@ -360,6 +362,8 @@ void Stmt(Type type, Node *root) {
 		/* Case for production: Stmt -> IF LP Exp RP XX */
 		root = root->sibling->sibling;
 		Type expType = Exp(root, &flag);
+		if(expType == NULL)
+			return;
 		/* expType can only be int */
 		/* XXX: Assume basic = 0 means 'int' here*/
 		assert(expType->kind == BASIC && expType->u.basic == 0);
@@ -380,6 +384,8 @@ void Stmt(Type type, Node *root) {
 		Type expType = Exp(root, &flag);
 		/* expType can only be int */
 		/* XXX: Assume basic = 0 means 'int' here*/
+		if(expType == NULL)
+			return;
 		assert(expType->kind == BASIC && expType->u.basic == 0);
 		root = root->sibling->sibling;
 		Stmt(type, root);
@@ -391,6 +397,8 @@ FieldList DefList(Node *root, int isStructure) {
 		printf("DefList\n");
 		/* Case for production: DefList -> Def DefList */
 		FieldList definitions = Def(root->child, isStructure);
+		if(definitions == NULL)
+			return NULL;
 		/* Find the end of list 'definitions' */
 		FieldList ptr = definitions;
 		while (ptr != NULL && ptr->tail != NULL) {
@@ -407,13 +415,16 @@ FieldList DefList(Node *root, int isStructure) {
 FieldList Def(Node *root, int isStructure) {
 	printf("Def\n");
 	Type type = Specifier(root->child);
-	printf("%d\n", type->kind);
+	if(type == NULL)
+		return NULL;
 	return DecList(type, root->child->sibling, isStructure);
 }
 
 FieldList DecList(Type type, Node *root, int isStructure) {
 	printf("DecList\n");
 	FieldList definition = Dec(type, root->child, isStructure);
+	if(definition == NULL)
+		return NULL;
 	/* Check here */
 	printf("Here:%s\n", definition->name);
 	FieldList varChecker = getVar(definition->name, 0);
@@ -421,7 +432,7 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 	if (varChecker == NULL && strcChecker == NULL) {
 		putVar(definition);
 	} else {
-		printf("Error type 16 at Line %d: Duplicated name \"%s\".\n", root->lexeme.linenum, definition->name);
+		printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
 		return NULL;
 	}
 	if (root->child->sibling == NULL) {
@@ -438,6 +449,8 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 FieldList Dec(Type type, Node *root, int isStructure) {
 	printf("Dec\n");
 	FieldList newVar = VarDec(type, root->child);
+	if(VarDec == NULL)
+		return NULL;
 	if (root->child->sibling == NULL) {
 		/* Case for production Dec -> VarDec */
 		return newVar;
@@ -511,7 +524,7 @@ Type Exp(Node *root, int *flag) {
 			if(arrayType == NULL)
 				return NULL;
 			if(arrayType->kind != ARRAY) {
-				printf("Error type 10 at Line %d: \"%s\" is not an array.\n", root->child->lexeme.linenum, root->child->lexeme.value);
+				printf("Error type 10 at Line %d: \"%s\" is not an array.\n", root->child->lexeme.linenum, root->child->child->lexeme.value);
 				return NULL;
 			}
 			root = root->child->sibling->sibling;
