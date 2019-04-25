@@ -1,0 +1,11 @@
+struct H {
+	int b;
+	int a = 0;
+	int b;
+};
+
+int main() {
+	int i, j;
+	int i, j;
+	return 0;	
+}
