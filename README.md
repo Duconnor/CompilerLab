@@ -9,3 +9,4 @@
 - Finish Lab1 (2019.3.29)
 
 - Start Lab2 (2019.4.17)
+- Finish Lab2 (2019.4.26)
