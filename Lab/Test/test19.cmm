@@ -1,0 +1,10 @@
+int main()
+{
+    int i, j;
+    int j = 2;
+    int k;
+    int k = 2;
+    int j = 2;
+    int j = 2;
+    return 0;
+}

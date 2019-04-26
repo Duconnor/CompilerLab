@@ -470,7 +470,6 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 			printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
 		else
 			printf("Error type 15 at Line %d: Redefined field \"%s\".\n", root->lexeme.linenum, definition->name);
-		return NULL;
 	}
 	if (root->child->sibling == NULL) {
 		/* Case for production DecList -> Dec */
