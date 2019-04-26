@@ -238,7 +238,6 @@ FieldList VarDec(Type type, Node *root) {
 		/* Get ID and insert into symbol table */
 		FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
 		newVar->name = root->child->lexeme.value;
-		/* XXX: make sure variable 'type' here will not be freed */
 		newVar->type = type;
 
 		/* Return immediately since there is no more child */
@@ -252,13 +251,12 @@ FieldList VarDec(Type type, Node *root) {
 		/* We now know it must be an array */
 		/* Get the dimension first */
 		int dimension = atoi(root->child->sibling->sibling->lexeme.value);
-		if (newVar->type->kind == BASIC) {
+		if (newVar->type->kind != ARRAY) {
 			/* This means we just came back from an ID node */
 			/* Construct a new type for 'array' */
-			int basic = newVar->type->u.basic;
 			Type elem = malloc(sizeof(Type));
-			elem->kind = BASIC;
-			elem->u.basic = basic;
+			elem->kind = newVar->type->kind;
+			elem->u = newVar->type->u;
 
 			newVar->type->kind = ARRAY;
 			newVar->type->u.array.size = dimension;
@@ -266,7 +264,13 @@ FieldList VarDec(Type type, Node *root) {
 		} else {
 			/* This means we came back from an VarDec node*/
 			/* Field 'elem' and 'kind' must be set already, so we just need to update 'size' */
+			Type elem = malloc(sizeof(Type));
+			elem->kind = ARRAY;
+			elem->u.array.size = dimension;
+			elem->u.array.elem = newVar->type->u.array.elem;
+
 			newVar->type->u.array.size *= dimension;
+			newVar->type->u.array.elem = elem;
 		}
 
 		/* Return now */
@@ -586,7 +590,10 @@ Type Exp(Node *root, int *flag) {
 			if(arrayType == NULL)
 				return NULL;
 			if(arrayType->kind != ARRAY) {
-				printf("Error type 10 at Line %d: \"%s\" is not an array.\n", root->child->lexeme.linenum, root->child->child->lexeme.value);
+				if(strcmp(root->child->child->lexeme.value, " ") != 0)
+					printf("Error type 10 at Line %d: \"%s\" is not an array.\n", root->child->lexeme.linenum, root->child->child->lexeme.value);
+				else
+					printf("Error type 10 at Line %d: The variable is not an array.\n", root->child->lexeme.linenum);
 				return NULL;
 			}
 			root = root->child->sibling->sibling;

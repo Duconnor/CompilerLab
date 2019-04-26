@@ -1,0 +1,9 @@
+struct A{
+    int a;
+};
+
+int main(){
+    struct A b;
+    struct A sa[11][11];
+    sa[1][2] = b;  
+}
