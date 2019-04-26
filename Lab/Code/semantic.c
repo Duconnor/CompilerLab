@@ -92,7 +92,7 @@ void ExtDef(Node *root) {
 	printf("ExtDef\n");
     Node *SpcNode = root->child;
     Type type = Specifier(SpcNode);
-	//printf("%d\n", type->kind);
+	printf("%d\n", type->kind);
     root = SpcNode->sibling;
     if(strcmp(root->lexeme.type, "SEMI") == 0)
         /* Case for ExtDef -> Specifier SEMI */
@@ -383,7 +383,7 @@ void Stmt(Type type, Node *root) {
 		Type expType = Exp(root->sibling, &flag);
 		if(expType == NULL)
 			return;
-		//printf("%d %d\n",expType->kind, type->kind);
+		printf("%d %d\n",expType->kind, type->kind);
 		if(!isEquivalent(expType, type->u.function->retVal))
 			printf("Error type 8 at Line %d: Type mismatched for return.\n", root->lexeme.linenum);
 		/* XXX: Need return here? */
@@ -426,14 +426,25 @@ FieldList DefList(Node *root, int isStructure) {
 		printf("DefList\n");
 		/* Case for production: DefList -> Def DefList */
 		FieldList definitions = Def(root->child, isStructure);
+		/* XXX: Make some change here 
+		 * Or we will skip some definition and can't report all bugs
+		 * See test20.cmm
+		*/
+		/*
 		if(definitions == NULL)
 			return NULL;
+		*/
+
 		/* Find the end of list 'definitions' */
 		FieldList ptr = definitions;
 		while (ptr != NULL && ptr->tail != NULL) {
 			ptr = ptr->tail;
 		}
-		ptr->tail = DefList(root->child->sibling, isStructure);
+		if (ptr != NULL)
+			ptr->tail = DefList(root->child->sibling, isStructure);
+		else
+			/* XXX: can be buggy here! */
+			definitions = DefList(root->child->sibling, isStructure);
 		/* Clear the field table, whether we use it or not */
 		clearFieldTable();
 		return definitions;
@@ -455,21 +466,22 @@ FieldList Def(Node *root, int isStructure) {
 FieldList DecList(Type type, Node *root, int isStructure) {
 	printf("DecList\n");
 	FieldList definition = Dec(type, root->child, isStructure);
-	if(definition == NULL)
-		return NULL;
-	/* Check here */
-	printf("Here:%s\n", definition->name);
-	FieldList varChecker = getVar(definition->name, 0);
-	Structure strcChecker = getStruct(definition->name);
-	FieldList fieldChecker = getFieldVar(definition->name);
-	if (varChecker == NULL && strcChecker == NULL && fieldChecker == NULL) {
-		putField(definition);
-		putVar(definition);
-	} else {
-		if (!isStructure)
-			printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
-		else
-			printf("Error type 15 at Line %d: Redefined field \"%s\".\n", root->lexeme.linenum, definition->name);
+	/* XXX: I made some change here */
+	if(definition != NULL) {
+		/* Check here */
+		printf("Here:%s\n", definition->name);
+		FieldList varChecker = getVar(definition->name, 0);
+		Structure strcChecker = getStruct(definition->name);
+		FieldList fieldChecker = getFieldVar(definition->name);
+		if (varChecker == NULL && strcChecker == NULL && fieldChecker == NULL) {
+			putField(definition);
+			putVar(definition);
+		} else {
+			if (!isStructure)
+				printf("Error type 3 at Line %d: Redefined variable \"%s\".\n", root->lexeme.linenum, definition->name);
+			else
+				printf("Error type 15 at Line %d: Redefined field \"%s\".\n", root->lexeme.linenum, definition->name);
+		}
 	}
 	if (root->child->sibling == NULL) {
 		/* Case for production DecList -> Dec */
@@ -477,7 +489,15 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 	} else {
 		/* Case for production DecList -> Dec COMMA DecList */
 		FieldList restVars = DecList(type, root->child->sibling->sibling, isStructure);
-		definition->tail = restVars;
+		/* XXX: Make some change here
+		 * Because we have changed above, now definition can be NULL so give it a check
+		 * See test21.cmm
+		 * */
+		if (definition != NULL)
+			definition->tail = restVars;
+		else
+			/* If definition is NULL, pretend the previous Dec does not exist */
+			definition = restVars;
 		return definition;
 	}
 }
@@ -493,11 +513,17 @@ FieldList Dec(Type type, Node *root, int isStructure) {
 	} else {
 		/* Case for production Dec -> VarDec ASSIGNOP Exp */
 		if (isStructure) {
-			printf("Error type 15 at Line %d: Multiple definition or initializing a field when defining a structure.\n", root->child->sibling->lexeme.linenum);
+			printf("Error type 15 at Line %d: Initializing a field when defining a structure.\n", root->child->sibling->lexeme.linenum);
 			return NULL;
 		} else {
 			int flag = 0;
 			Type expType = Exp(root->child->sibling->sibling, &flag);
+			/* XXX: Make some change here
+			 * Have to check whether expType is NULL
+			 * Seen test21.cmm
+			 * */
+			if (expType == NULL)
+				return NULL;
 			if (!isEquivalent(type, expType)) {
 				printf("Error type 5 at Line %d: Type mismatched for assignment.\n", root->child->sibling->lexeme.linenum);
 				return NULL;

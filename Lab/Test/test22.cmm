@@ -1,0 +1,13 @@
+struct H {
+	int h;
+};
+int main() {
+	int a = 0;
+	float b = 0;
+	int c = b, d = a;
+	struct H e;	
+	int g = e.i;
+	int f = e.h;
+	int x[11][12];
+	int y = x[1][2];
+}
