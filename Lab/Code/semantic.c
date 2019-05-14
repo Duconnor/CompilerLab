@@ -39,7 +39,7 @@ static int isEquivalent(Type this, Type that) {
 		} else {
 			/* For function, we need to consider return type and its parameters */
 			int isRetTypeEquivalent = isEquivalent(this->u.function->retVal, that->u.function->retVal);
-			//printf("%d\n",isRetTypeEquivalent);
+			printf("%d\n",isRetTypeEquivalent);
 			int isParametersEquivalent = 1;
 			FieldList thisList = this->u.function->parameters;
 			FieldList thatList = that->u.function->parameters;
@@ -77,13 +77,13 @@ static void findAllIncomplete() {
 
 /* High-level Definitions */
 void Program(Node *root) {
-	//printf("Program\n");
+	printf("Program\n");
     ExtDefList(root->child);
 	findAllIncomplete();
 }
 
 void ExtDefList(Node *root) {
-	//printf("ExtDefList\n");
+	printf("ExtDefList\n");
     if(root->child != NULL){
         /* Case for production: ExtDefList -> ExtDef ExtDefList */
         ExtDef(root->child);
@@ -95,10 +95,10 @@ void ExtDefList(Node *root) {
 }
 
 void ExtDef(Node *root) {
-	//printf("ExtDef\n");
+	printf("ExtDef\n");
     Node *SpcNode = root->child;
     Type type = Specifier(SpcNode);
-	//printf("%d\n", type->kind);
+	printf("%d\n", type->kind);
     root = SpcNode->sibling;
     if(strcmp(root->lexeme.type, "SEMI") == 0)
         /* Case for ExtDef -> Specifier SEMI */
@@ -115,9 +115,10 @@ void ExtDef(Node *root) {
             func->isDefined = 1;
             /* Check if there is a function with the same name*/
             FieldList funcVarChecker = getVar(funcVar->name, funcVar->type->kind);
-            if(funcVarChecker == NULL)
+            if(funcVarChecker == NULL) {
                 /* A new function, insert it into table */
                 putVar(funcVar);
+			}
             else {
                 Function funcChecker = funcVarChecker->type->u.function;
                 if(funcChecker->isDefined == 1)
@@ -149,7 +150,7 @@ void ExtDef(Node *root) {
 }
 
 void ExtDecList(Type type, Node *root) {
-	//printf("ExtDecList\n");
+	printf("ExtDecList\n");
     FieldList newVar = VarDec(type, root->child);
 	FieldList varChecker = getVar(newVar->name, newVar->type->kind);
 	Structure strcChecker = getStruct(newVar->name);
@@ -169,7 +170,7 @@ void ExtDecList(Type type, Node *root) {
 }
 
 Type Specifier(Node *root) {
-	//printf("Specifier\n");
+	printf("Specifier\n");
 	Type type;
 	if(strcmp(root->child->lexeme.type, "TYPE") == 0) {
 		/* Case for production: Specifier -> TYPE */
@@ -188,7 +189,7 @@ Type Specifier(Node *root) {
 }
 
 Type StructSpecifer(Node *root) {
-	//printf("StructSpecifer\n");
+	printf("StructSpecifer\n");
 	root = root->child->sibling;
 	if(strcmp(root->lexeme.type, "OptTag") == 0) {
 		/* Case for production: StructSpecifier -> STRUCT OptTag LC DefList RC */
@@ -237,7 +238,7 @@ Type StructSpecifer(Node *root) {
 
 /* Declarators */
 FieldList VarDec(Type type, Node *root) {
-	//printf("VarDec\n");
+	printf("VarDec\n");
 	if (strcmp(root->child->lexeme.type, "ID") == 0) {
 		/* Case for production: VarDec -> ID */
 
@@ -285,7 +286,7 @@ FieldList VarDec(Type type, Node *root) {
 }
 
 FieldList FunDec(Type type, Node *root) {
-	//printf("FunDec\n");
+	printf("FunDec\n");
 	FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
 	/* Set the ID first */
 	newVar->name = root->child->lexeme.value;
@@ -301,7 +302,7 @@ FieldList FunDec(Type type, Node *root) {
 	if (strcmp(root->lexeme.type, "RP") == 0) {
 		/* Case for production: FunDec -> ID LP RP */
 		newFunc->parameters = NULL; /* No parameters */
-		//printf("FunDec ends\n");
+		printf("FunDec ends\n");
 		return newVar;
 	} else {
 		/* Case for production: FunDec -> ID LP VarList RP */
@@ -311,13 +312,13 @@ FieldList FunDec(Type type, Node *root) {
 		VarList(listHead, root, newVar->name);
 		newFunc->parameters = listHead->tail;
 		free(listHead);
-		//printf("FunDec ends\n");
+		printf("FunDec ends\n");
 		return newVar;
 	}
 }
 
 void VarList(FieldList list, Node *root, char *name) {
-	//printf("VarList\n");
+	printf("VarList\n");
 	FieldList newParam = ParamDec(root->child, name);
 	root = root->child->sibling;
 	FieldList tmp = list;
@@ -334,7 +335,7 @@ void VarList(FieldList list, Node *root, char *name) {
 }
 
 FieldList ParamDec(Node *root, char *name) {
-	//printf("ParamDec\n");
+	printf("ParamDec\n");
 	Type paramType = Specifier(root->child);
 	root = root->child->sibling;
 	FieldList newParam = VarDec(paramType, root);
@@ -358,7 +359,7 @@ FieldList ParamDec(Node *root, char *name) {
 
 /* Stataments */
 void CompSt(Type type, Node *root) {
-	//printf("Compst\n");
+	printf("Compst\n");
 	/* XXX: might need some change here */
 	DefList(root->child->sibling, 0);
 
@@ -366,7 +367,7 @@ void CompSt(Type type, Node *root) {
 }
 
 void StmtList(Type type, Node *root) {
-	//printf("StmtList\n");
+	printf("StmtList\n");
 	if (root->child != NULL) {
 		/* Case for production: StmtList -> Stmt StmtList */
 		Stmt(type, root->child);
@@ -378,7 +379,7 @@ void StmtList(Type type, Node *root) {
 }
 
 void Stmt(Type type, Node *root) {
-	//printf("Stmt\n");
+	printf("Stmt\n");
 	root = root->child;
 	int flag = 0;
 	if (strcmp(root->lexeme.type, "Exp") == 0) {
@@ -393,7 +394,8 @@ void Stmt(Type type, Node *root) {
 		Type expType = Exp(root->sibling, &flag);
 		if(expType == NULL)
 			return;
-		//printf("%d %d\n",expType->kind, type->kind);
+		/* FIXME: type is NULL here, which causes segmentation fault */
+		printf("%d %d\n",expType->kind, type->kind);
 		if(!isEquivalent(expType, type->u.function->retVal))
 			printf("Error type 8 at Line %d: Type mismatched for return.\n", root->lexeme.linenum);
 		/* XXX: Need return here? */
@@ -433,7 +435,7 @@ void Stmt(Type type, Node *root) {
 
 FieldList DefList(Node *root, int isStructure) {
 	if (root->child != NULL) {
-		//printf("DefList\n");
+		printf("DefList\n");
 		/* Case for production: DefList -> Def DefList */
 		FieldList definitions = Def(root->child, isStructure);
 		/* XXX: Make some change here 
@@ -466,7 +468,7 @@ FieldList DefList(Node *root, int isStructure) {
 }
 
 FieldList Def(Node *root, int isStructure) {
-	//printf("Def\n");
+	printf("Def\n");
 	Type type = Specifier(root->child);
 	if(type == NULL)
 		return NULL;
@@ -474,12 +476,12 @@ FieldList Def(Node *root, int isStructure) {
 }
 
 FieldList DecList(Type type, Node *root, int isStructure) {
-	//printf("DecList\n");
+	printf("DecList\n");
 	FieldList definition = Dec(type, root->child, isStructure);
 	/* XXX: I made some change here */
 	if(definition != NULL) {
 		/* Check here */
-		//printf("Here:%s\n", definition->name);
+		printf("Here:%s\n", definition->name);
 		FieldList varChecker = getVar(definition->name, 0);
 		Structure strcChecker = getStruct(definition->name);
 		FieldList fieldChecker = getFieldVar(definition->name);
@@ -513,7 +515,7 @@ FieldList DecList(Type type, Node *root, int isStructure) {
 }
 
 FieldList Dec(Type type, Node *root, int isStructure) {
-	//printf("Dec\n");
+	printf("Dec\n");
 	FieldList newVar = VarDec(type, root->child);
 	if(VarDec == NULL)
 		return NULL;
@@ -545,7 +547,7 @@ FieldList Dec(Type type, Node *root, int isStructure) {
 
 /* Expressions */
 Type Exp(Node *root, int *flag) {
-	//printf("Exp\n");
+	printf("Exp\n");
 	if(strcmp(root->child->lexeme.type, "Exp") == 0) {
 		if(strcmp(root->child->sibling->lexeme.type, "ASSIGNOP") == 0){
 			/* Case for production: Exp -> Exp ASSIGNOP Exp */
@@ -706,12 +708,12 @@ Type Exp(Node *root, int *flag) {
 	}
 	else if(strcmp(root->child->lexeme.type, "INT") == 0) {
 		/* Case for production: Exp -> INT */
-		//printf("check0\n");
+		printf("check0\n");
 		Type type = (Type)malloc(sizeof(struct Type_));
 		type->kind = BASIC;
 		type->u.basic = 0;
 		*flag = 1;
-		//printf("check1\n");
+		printf("check1\n");
 		return type;
 	}
 	else if(strcmp(root->child->lexeme.type, "FLOAT") == 0) {
@@ -725,7 +727,7 @@ Type Exp(Node *root, int *flag) {
 }
 
 int Args(Node *root, FieldList paramList) {
-	//printf("Args\n");
+	printf("Args\n");
 	if(paramList == NULL)
 		return 1;
 	int flag = 0;
