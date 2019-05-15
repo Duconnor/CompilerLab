@@ -110,7 +110,7 @@ void ExtDef(Node *root) {
         FieldList funcVar = FunDec(type, root);
         Function func = funcVar->type->u.function;
         if(strcmp(root->sibling->lexeme.type, "CompSt") == 0) {
-			if (funcVar->type == NULL)
+			//if (funcVar->type == NULL)
 				//printf("ExtDef NULL\n");
 			CompSt(funcVar->type, root->sibling);
             /* Case for ExtDef -> Specifier FunDec CompSt */
