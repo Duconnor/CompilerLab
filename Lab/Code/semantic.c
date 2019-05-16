@@ -687,7 +687,7 @@ Type Exp(Node *root, int *flag) {
 				printf("Error type 11 at Line %d: \"%s\" is not a function.\n", root->child->lexeme.linenum, root->child->lexeme.value);
 				return NULL;
 			}
-			if(funcVarChecker == NULL || funcVarChecker->type->u.function->isDefined == 0) {
+			if(funcVarChecker == NULL || funcVarChecker->type->u.function->isDefined + funcVarChecker->type->u.function->isDeclared == 0) {
 				printf("Error type 2 at Line %d: Undefined function \"%s\".\n", root->child->lexeme.linenum, root->child->lexeme.value);
 				return NULL;
 			}
@@ -746,4 +746,6 @@ int Args(Node *root, FieldList paramList) {
 			return Args(root, paramList->tail);
 		}
 	}
+	else
+		return 1;
 }
