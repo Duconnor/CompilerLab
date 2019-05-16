@@ -1,0 +1,11 @@
+struct H {
+	int a;	
+};
+
+int main() {
+	int a = 3;
+	int d = 3;
+	int b[2][3];
+	3 = 2.5;
+	a = a - b;
+}
