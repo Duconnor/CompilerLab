@@ -1,6 +1,0 @@
-int main() {
-	int a = 0;
-	float b = 0;
-	int c = b, d = a;
-	struct H d;	
-}
