@@ -21,6 +21,7 @@ struct Type_ {
 
 struct FieldList_ {
     char* name;
+	int num; /* This vars' corresponding index (added in Lab3) */
     Type type;
     FieldList tail;
 };

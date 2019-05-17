@@ -15,8 +15,8 @@ struct Operand_ {
 struct InterCode_ {
 	enum { ASSIGN, ADD, SUB, MUL } kind;
 	union {
-		struct { Operand right, left} assign;
-		struct { Operand result, op1, op2 } binop;
+		struct { Operand right, left; } assign;
+		struct { Operand result, op1, op2; } binop;
 	} u;
 	InterCode prev;
 	InterCode next;
