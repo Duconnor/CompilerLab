@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "intercode.h"
 
 static void debug(char *str) {
@@ -48,7 +49,7 @@ void delCode(InterCode ic) {
 }
 
 char* printOperand(Operand op) {
-    char opStr[10];
+    char* opStr = (char*)malloc(sizeof(char) * 10);
     memset(opStr, 0, sizeof(opStr));
     switch(op->kind) {
         case TEMPVAR:
@@ -143,5 +144,58 @@ void printInterCodes(char* fileName) {
     InterCode currIC = codesHead;
     do{
         printInterCode(currIC, fp);
+        currIC = currIC->next;
     }while(currIC != codesHead);  
 }
+
+/*
+int main() {
+    InterCode ic1 = (InterCode)malloc(sizeof(struct InterCode_));
+    Operand op11 = (Operand)malloc(sizeof(struct Operand_));
+    ic1->kind = FUNCTION;
+    ic1->u.sinop.op = op11;
+    op11->kind = FUNCTION;
+    op11->u.name = "add";
+    putCode(ic1);
+
+    InterCode ic2 = (InterCode)malloc(sizeof(struct InterCode_));
+    Operand op21 = (Operand)malloc(sizeof(struct Operand_));
+    ic2->kind = PARAM;
+    ic2->u.sinop.op = op21;
+    op21->kind = VARIABLE;
+    op21->u.varNum = 1;
+    putCode(ic2);
+
+    InterCode ic3 = (InterCode)malloc(sizeof(struct InterCode_));
+    Operand op31 = (Operand)malloc(sizeof(struct Operand_));
+    Operand op32 = (Operand)malloc(sizeof(struct Operand_));
+    ic3->kind = ASSIGNP;
+    ic3->u.assign.left = op31;
+    ic3->u.assign.right = op32;
+    op31->kind = TEMPVAR;
+    op31->u.varNum = 2;
+    op32->kind = VARIABLE;
+    op32->u.varNum = 1;
+    putCode(ic3);
+
+    InterCode ic4 = (InterCode)malloc(sizeof(struct InterCode_));
+    Operand op41 = (Operand)malloc(sizeof(struct Operand_));
+    Operand op42 = (Operand)malloc(sizeof(struct Operand_));
+    Operand op4r = (Operand)malloc(sizeof(struct Operand_));
+    ic4->kind = ADD;
+    ic4->u.binop.op1 = op41; 
+    ic4->u.binop.op2 = op42;
+    ic4->u.binop.result = op4r;
+    op41->kind = VARIABLE;
+    op41->u.varNum = 1;
+    op42->kind = CONSTANT;
+    op42->u.value = 4;
+    op4r->kind = VARIABLE;
+    op4r->u.varNum = 7;
+    putCode(ic4);
+
+    printInterCodes("test.ir");
+
+    return 0;
+}
+*/
