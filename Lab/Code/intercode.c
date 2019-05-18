@@ -4,6 +4,9 @@ static int curTempNum = 0; /* Initialize to 0 */
 static int curVarNum = 0; /* Initialize to 0 */
 static int curLabel = 0; /* Initialize to 0 */
 
+static int WIDTH = 4; /* Should be modified to proper value */
+static int OFFSET = 0;
+
 static int genNext(int &current) {
 	current++;
 	if (current < 0) {
@@ -150,17 +153,74 @@ static int cond_Exp(Node *exp, int &place) {
 	/* Gen place := #0 */
 	InterCode newCode1 = genAssign(TEMPVAL, CONSTANT, place, 0);
 	newCode1->kind = ASSIGN;
+	putCode(newCode1);
 	translate_Cond(Exp, label1, label2);
 	/* Gen LABEL label1 */
 	InterCode newCode2 = genSinop(LB, label1);
 	newCode2->kind = LABEL;
+	putCode(newCode2);
 	/* Gen place := #1 */
 	InterCode newCode3 = genAssign(TEMPVAL, CONSTANT, place, 1);
 	newCode3->kind = ASSIGN;
+	putCode(newCode3);
 	/* Gen LABEL label2 */
 	InterCode newCode4 = genSinop(LB, label2);
 	newCode4->kind = LABEL;
+	putCode(newCode4);
 	return TEMPVAL;
+}
+
+static int getArraySize(Node *exp) {
+	Node *node = exp->child;
+	if (strcmp(node->lexeme.type, "INT") != 0) {
+		/* Should never reach here 
+		 * Or it will have grammar error */
+		printf("getArraySize error!\n");
+		exit(-1);
+	}
+	return atoi(node->lexeme.value);
+}
+
+static int findOffset(char *structureName, char *memberName) {
+	/* If memberName = NULL, return the whole size of this structure */
+	if (structureName == NULL) {
+		/* Should never reach here */
+		printf("findOffset error!\n");
+		exit(-1);
+	}
+	Structure struc = getStruct(structureName);
+	int offset = 0;
+	FieldList member = struc->member;
+	while (member != NULL) {
+		if (memberName != NULL) {
+			if (strcmp(memberName, member->name) == 0) {
+				/* TODO: what if we want to access an ARRAY? */
+				/* Find what we want */
+				return offset;
+			}
+		}
+		if (member->type->kind == BASIC) {
+			offset += 4;
+		} else if (member->type->kind == ARRAY) {
+			/* XXX: It seems that we will also put definition inside the struture into the var list? */
+			offset += (member->type->u.array.size * findWidth(member->name);
+		} else if (member->type->kind == STRUCTURE) {
+			offset += findOffset(member->name, NULL);
+		}
+		member = member->tail;
+	}
+	return offset;
+}
+
+static int findWidth(char *arrayName) {
+	 /* We search the var list to find it's type */
+	FieldList var = getVar(arrayName, 0);
+	Type elem = var->type->u.array.elem;
+	if (elem->kind == BASIC) {
+		return 4;
+	}
+	/* The element type is a structure */
+	return findOffset(elem->u.structure->name, NULL);
 }
 
 int translate_Exp(Node *exp, int &place) {
@@ -176,14 +236,16 @@ int translate_Exp(Node *exp, int &place) {
 		return TEMPVAL;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
 		/* Important! Usage of genBack here */
-		genBack(place);
+		genBack(curTempNum);
 		place = genNext(curVarNum);
 		/*----------------------------------*/
 		FieldList var = getVar(node->lexeme.value, 0);
 		if (var.num == -1) {
 			var.num = place;
 		} else {
-			/* XXX: I don't think we should do anything here */
+			/* This means we have alreay associated one index for this var */
+			genBack(curVarNum); /* Put this var index back */
+			place = var.num;
 		}
 		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
@@ -201,7 +263,7 @@ int translate_Exp(Node *exp, int &place) {
 			 * Despite Exp1 must be ID 
 			 * I will pass it to translate_Exp anyway
 			 * In order to match this ID with a corresponding num */
-			int numLeft = genNext(curTempNum); /* Left is ID (variable) */
+			int numLeft = genNext(curTempNum);
 			int kindLeft = translate_Exp(node, numLeft);
 			int numRight = genNext(curTempNum);
 			int kindRight = translate_Exp(node->sibling->sibling, numRight);
@@ -238,8 +300,57 @@ int translate_Exp(Node *exp, int &place) {
 				|| strcmp(type, "AND") == 0
 				|| strcmp(type, "OR") == 0) {
 			return cond_Exp(exp, place);
+		} else if (strcmp(type, "LB") == 0) {
+			/* For array */
+			/* Because we don't support multi-dimensinal array
+			 * Exp -> Exp1 LB Exp2 RB 
+			 * Exp1 must be of type 'ID' */
+			if (strcmp(node->child->lexeme.type, "ID") != 0) {
+				/* Case when we encounter a multi dim array */
+				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+				exit(-1);
+			}
+			/* First, find the start address */
+			int tempStartAddr = genNext(curTempNum);
+			int kindStartAddr = translate_Exp(node, tempStartAddr);
+
+			int bracketNum = getArraySize(node->sibling->sibling);
+			/* bracketNum is the index */
+			/* Determine the WIDTH here! */
+			WIDTH = findWidth(node->child->lexeme.value);
+			/* Finally, combine them to get the address of the value we need 
+			 * In the intercode: t = v_{start} + index * WIDTH */
+			int tempAddr = genNext(curTempNum);
+			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAL, tempStartAddr, bracketNum * WIDTH, tempAddr);
+			newCode1->kind = ADD;
+			putCode(newCode1);
+			/* Associate place with the result */
+			InterCode newCode2 = genAssign(TEMPVAL, TEMPVAL, place, tempAddr);
+			newCode2->kind = ASSIGNP;
+			putCode(newCode2);
+			/* Return type is TEMPVAL */
+			return TEMPVAL;
+		} else if (strcmp(type, "DOT") == 0) {
+			/* For structure */
+			/* First, find the start address */
+			int tempStartAddr = genNext(curTempNum);
+			int kindStartAddr = translate_Exp(node, tempStartAddr);
+			/* Second, get the offset of the member */
+			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme->value);
+			/* Third, get the address of the memeber */
+			int tempAddr = genNext(curTempNum);
+			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAL, tempStartAddr, OFFSET, tempAddr);
+			newCode1->kind = ADD;
+			putCode(newCode1);
+			/* Finally, get the member from that address */
+			InterCode newCode2 = genAssign(TEMPVAL, TEMPVAL, place, tempAddr);
+			newCode2->kind = ASSIGNP;
+			putCode(newCode2);
+			return TEMPVAL;
 		}
 	} else if (strcmp(node->lexeme.type, "NOT") == 0) {
 		return cond_Exp(exp, place);
 	}
 }
+
+
