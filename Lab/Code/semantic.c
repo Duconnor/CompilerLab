@@ -248,6 +248,7 @@ FieldList VarDec(Type type, Node *root) {
 		FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
 		newVar->name = root->child->lexeme.value;
 		newVar->type = type;
+		newVar->num = -1;
 
 		/* Return immediately since there is no more child */
 		return newVar;
@@ -294,6 +295,7 @@ FieldList FunDec(Type type, Node *root) {
 	newVar->name = root->child->lexeme.value;
     newVar->type = (Type)malloc(sizeof(struct Type_));
     newVar->type->kind = FUNCTION;
+	newVar->num = -1;
     Function newFunc = (Function)malloc(sizeof(struct Function_));
     newVar->type->u.function = newFunc;
     newFunc->isDeclared = 1;
