@@ -159,7 +159,7 @@ static int cond_Exp(Node *exp, int *place) {
 	int label1 = genNext(curLabel);
 	int label2 = genNext(curLabel);
 	/* Gen place := #0 */
-	InterCode newCode1 = genAssign(TEMPVAR, CONSTANT, place, 0);
+	InterCode newCode1 = genAssign(TEMPVAR, CONSTANT, *place, 0);
 	newCode1->kind = ASSIGN;
 	putCode(newCode1);
 	translate_Cond(Exp, label1, label2);
@@ -168,7 +168,7 @@ static int cond_Exp(Node *exp, int *place) {
 	newCode2->kind = LABEL;
 	putCode(newCode2);
 	/* Gen place := #1 */
-	InterCode newCode3 = genAssign(TEMPVAR, CONSTANT, place, 1);
+	InterCode newCode3 = genAssign(TEMPVAR, CONSTANT, *place, 1);
 	newCode3->kind = ASSIGN;
 	putCode(newCode3);
 	/* Gen LABEL label2 */
@@ -238,29 +238,29 @@ int translate_Exp(Node *exp, int *place) {
 	Node *node = exp->child;
 	if (strcmp(node->lexeme.type, "INT") == 0) {
 		int value = atoi(node->lexeme.value);
-		InterCode newCode = genAssign(TEMPVAR, CONSTANT, place, value);
-		newCode->kind = ASSIGN;
+		InterCode newCode = genAssign(TEMPVAR, CONSTANT, *place, value);
+		newCode->kind = ASSIGN; // Redundant here?
 		putCode(newCode);
 		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
 		/* Important! Usage of genBack here */
 		genBack(curTempNum);
-		place = genNext(curVarNum);
+		*place = genNext(curVarNum);
 		/*----------------------------------*/
 		FieldList var = getVar(node->lexeme.value, 0);
 		if (var->num == -1) {
-			var->num = place;
+			var->num = *place;
 		} else {
 			/* This means we have alreay associated one index for this var */
 			genBack(curVarNum); /* Put this var index back */
-			place = var->num;
+			*place = var->num;
 		}
 		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
 		int num = genNext(curTempNum);
 		/* Now we are at 'MINUS', its child is 'Exp1' */
 		int kind = translate_Exp(node->sibling, num);
-		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAR, 0, num, place);
+		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAR, 0, num, *place);
 		newCode->kind = SUB; /* place := #0 - t_num */
 		putCode(newCode);
 		return TEMPVAR;
@@ -278,7 +278,7 @@ int translate_Exp(Node *exp, int *place) {
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
 			newCode->kind = ASSIGN;
 			putCode(newCode);
-			InterCode newCode2 = genAssign(TEMPVAR, kindLeft, place, numLeft);
+			InterCode newCode2 = genAssign(TEMPVAR, kindLeft, *place, numLeft);
 			newCode2->kind = ASSIGN;
 			putCode(newCode2);
 			return TEMPVAR;
@@ -291,7 +291,7 @@ int translate_Exp(Node *exp, int *place) {
 			int kind1 = translate_Exp(node, num1);
 			int num2 = genNext(curTempNum);
 			int kind2 = translate_Exp(node->sibling->sibling, num2);
-			InterCode newCode = genBinop(kind1, kind2, TEMPVAR, num1, num2, place);
+			InterCode newCode = genBinop(kind1, kind2, TEMPVAR, num1, num2, *place);
 			putCode(newCode);
 			/* Now, we determine the 'kind' of 'newCode' */
 			if (strcmp(type, "PLUS") == 0) {
@@ -333,7 +333,7 @@ int translate_Exp(Node *exp, int *place) {
 			newCode1->kind = ADD;
 			putCode(newCode1);
 			/* Associate place with the result */
-			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, place, tempAddr);
+			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
 			newCode2->kind = ASSIGNP;
 			putCode(newCode2);
 			/* Return type is TEMPVAR */
@@ -351,7 +351,7 @@ int translate_Exp(Node *exp, int *place) {
 			newCode1->kind = ADD;
 			putCode(newCode1);
 			/* Finally, get the member from that address */
-			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, place, tempAddr);
+			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
 			newCode2->kind = ASSIGNP;
 			putCode(newCode2);
 			return TEMPVAR;
