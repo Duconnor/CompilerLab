@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "semantic.h"
+#include "intercode.h"
+#include "table.h"
+
+
 extern FieldList varTable[TABLE_SIZE];
 
 static int curTempNum = 0; /* Initialize to 0 */
@@ -7,17 +15,17 @@ static int curLabel = 0; /* Initialize to 0 */
 static int WIDTH = 4; /* Should be modified to proper value */
 static int OFFSET = 0;
 
-static int genNext(int &current) {
-	current++;
-	if (current < 0) {
+static int genNext(int* current) {
+	*current++;
+	if (*current < 0) {
 		/* Overflow */
 		printf("Can't generate more!\n");
 		exit(-1);
 	}
-	return current;
+	return *current;
 }
 
-static void genBack(int &current) {
+static void genBack(int* current) {
 	/* Important!!! Why we need this function? 
 	 * Because we use different type for temp vars and normal vars 
 	 * Their corresponding index should be different too (i.e. curTempNum and curVarNum)
@@ -28,7 +36,7 @@ static void genBack(int &current) {
 	 * And when we find out we are wrong (i.e. Exp -> ID)
 	 * We use this genBack function to decrement curTempNum and generate a new index for normal variable 
 	 * XXX: It is dangerous! 必需在调用函数的上一条语句使用genNext生成新的临时变量的对应index值，否则此处可能会出错！！！！*/
-	current--;
+	*current--;
 	if (current < 0) {
 		/* Should never reach here */
 		printf("genBack error!\n");
@@ -40,7 +48,7 @@ static InterCode genSinop(int kind, int val) {
 	InterCode newCode = (InterCode)malloc(sizeof(struct InterCode_));
 	Operand op = (Operand)malloc(sizeof(struct Operand_));
 	op->kind = kind;
-	op->val = val;
+	op->u.value = val;
 	newCode->u.sinop.op = op;
 	newCode->prev = NULL;
 	newCode->next = NULL;
@@ -147,11 +155,11 @@ static InterCode genFunc(int op1Kind, int op2Kind, int op1Var, int op2Var) {
 	return newCode;
 }
 
-static int cond_Exp(Node *exp, int &place) {
-	label1 = genNext(curLabel);
-	label2 = genNext(curLabel);
+static int cond_Exp(Node *exp, int *place) {
+	int label1 = genNext(curLabel);
+	int label2 = genNext(curLabel);
 	/* Gen place := #0 */
-	InterCode newCode1 = genAssign(TEMPVAL, CONSTANT, place, 0);
+	InterCode newCode1 = genAssign(TEMPVAR, CONSTANT, place, 0);
 	newCode1->kind = ASSIGN;
 	putCode(newCode1);
 	translate_Cond(Exp, label1, label2);
@@ -160,14 +168,14 @@ static int cond_Exp(Node *exp, int &place) {
 	newCode2->kind = LABEL;
 	putCode(newCode2);
 	/* Gen place := #1 */
-	InterCode newCode3 = genAssign(TEMPVAL, CONSTANT, place, 1);
+	InterCode newCode3 = genAssign(TEMPVAR, CONSTANT, place, 1);
 	newCode3->kind = ASSIGN;
 	putCode(newCode3);
 	/* Gen LABEL label2 */
 	InterCode newCode4 = genSinop(LB, label2);
 	newCode4->kind = LABEL;
 	putCode(newCode4);
-	return TEMPVAL;
+	return TEMPVAR;
 }
 
 static int getArraySize(Node *exp) {
@@ -203,7 +211,7 @@ static int findOffset(char *structureName, char *memberName) {
 			offset += 4;
 		} else if (member->type->kind == ARRAY) {
 			/* XXX: It seems that we will also put definition inside the struture into the var list? */
-			offset += (member->type->u.array.size * findWidth(member->name);
+			offset += (member->type->u.array.size * findWidth(member->name));
 		} else if (member->type->kind == STRUCTURE) {
 			offset += findOffset(member->name, NULL);
 		}
@@ -223,39 +231,39 @@ static int findWidth(char *arrayName) {
 	return findOffset(elem->u.structure->name, NULL);
 }
 
-int translate_Exp(Node *exp, int &place) {
+int translate_Exp(Node *exp, int *place) {
 	/* Param 'varNum': the index of this variable */
 	/* Return: the 'kind' (type) of this intercode */
 	/* Current node's type is 'Exp' */
 	Node *node = exp->child;
 	if (strcmp(node->lexeme.type, "INT") == 0) {
 		int value = atoi(node->lexeme.value);
-		InterCode newCode = genAssign(TEMPVAL, CONSTANT, place, value);
+		InterCode newCode = genAssign(TEMPVAR, CONSTANT, place, value);
 		newCode->kind = ASSIGN;
 		putCode(newCode);
-		return TEMPVAL;
+		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
 		/* Important! Usage of genBack here */
 		genBack(curTempNum);
 		place = genNext(curVarNum);
 		/*----------------------------------*/
 		FieldList var = getVar(node->lexeme.value, 0);
-		if (var.num == -1) {
-			var.num = place;
+		if (var->num == -1) {
+			var->num = place;
 		} else {
 			/* This means we have alreay associated one index for this var */
 			genBack(curVarNum); /* Put this var index back */
-			place = var.num;
+			place = var->num;
 		}
 		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
 		int num = genNext(curTempNum);
 		/* Now we are at 'MINUS', its child is 'Exp1' */
 		int kind = translate_Exp(node->sibling, num);
-		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAL, 0, num, place);
+		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAR, 0, num, place);
 		newCode->kind = SUB; /* place := #0 - t_num */
 		putCode(newCode);
-		return TEMPVAL;
+		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "Exp") == 0) {
 		char *type = node->sibling->lexeme.type;
 		if (strcmp(type, "ASSIGNOP") == 0) {
@@ -270,10 +278,10 @@ int translate_Exp(Node *exp, int &place) {
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
 			newCode->kind = ASSIGN;
 			putCode(newCode);
-			InterCode newCode2 = genAssign(TEMPVAL, kindLeft, place, numLeft);
+			InterCode newCode2 = genAssign(TEMPVAR, kindLeft, place, numLeft);
 			newCode2->kind = ASSIGN;
 			putCode(newCode2);
-			return TEMPVAL;
+			return TEMPVAR;
 		} else if (strcmp(type, "PLUS") == 0 
 				|| strcmp(type, "MINUS") == 0
 				|| strcmp(type, "STAR") == 0
@@ -283,7 +291,7 @@ int translate_Exp(Node *exp, int &place) {
 			int kind1 = translate_Exp(node, num1);
 			int num2 = genNext(curTempNum);
 			int kind2 = translate_Exp(node->sibling->sibling, num2);
-			InterCode newCode = genBinop(kind1, kind2, TEMPVAL, num1, num2, place);
+			InterCode newCode = genBinop(kind1, kind2, TEMPVAR, num1, num2, place);
 			putCode(newCode);
 			/* Now, we determine the 'kind' of 'newCode' */
 			if (strcmp(type, "PLUS") == 0) {
@@ -295,7 +303,7 @@ int translate_Exp(Node *exp, int &place) {
 			} else if (strcmp(type, "DIV") == 0) {
 				newCode->kind = DIV;
 			}
-			return TEMPVAL;
+			return TEMPVAR;
 		} else if (strcmp(type, "RELOP") == 0
 				|| strcmp(type, "AND") == 0
 				|| strcmp(type, "OR") == 0) {
@@ -321,32 +329,32 @@ int translate_Exp(Node *exp, int &place) {
 			/* Finally, combine them to get the address of the value we need 
 			 * In the intercode: t = v_{start} + index * WIDTH */
 			int tempAddr = genNext(curTempNum);
-			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAL, tempStartAddr, bracketNum * WIDTH, tempAddr);
+			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, bracketNum * WIDTH, tempAddr);
 			newCode1->kind = ADD;
 			putCode(newCode1);
 			/* Associate place with the result */
-			InterCode newCode2 = genAssign(TEMPVAL, TEMPVAL, place, tempAddr);
+			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, place, tempAddr);
 			newCode2->kind = ASSIGNP;
 			putCode(newCode2);
-			/* Return type is TEMPVAL */
-			return TEMPVAL;
+			/* Return type is TEMPVAR */
+			return TEMPVAR;
 		} else if (strcmp(type, "DOT") == 0) {
 			/* For structure */
 			/* First, find the start address */
 			int tempStartAddr = genNext(curTempNum);
 			int kindStartAddr = translate_Exp(node, tempStartAddr);
 			/* Second, get the offset of the member */
-			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme->value);
+			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme.value);
 			/* Third, get the address of the memeber */
 			int tempAddr = genNext(curTempNum);
-			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAL, tempStartAddr, OFFSET, tempAddr);
+			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
 			newCode1->kind = ADD;
 			putCode(newCode1);
 			/* Finally, get the member from that address */
-			InterCode newCode2 = genAssign(TEMPVAL, TEMPVAL, place, tempAddr);
+			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, place, tempAddr);
 			newCode2->kind = ASSIGNP;
 			putCode(newCode2);
-			return TEMPVAL;
+			return TEMPVAR;
 		}
 	} else if (strcmp(node->lexeme.type, "NOT") == 0) {
 		return cond_Exp(exp, place);
