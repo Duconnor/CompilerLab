@@ -14,6 +14,25 @@ static int genNext(int &current) {
 	return current;
 }
 
+static void genBack(int &current) {
+	/* Important!!! Why we need this function? 
+	 * Because we use different type for temp vars and normal vars 
+	 * Their corresponding index should be different too (i.e. curTempNum and curVarNum)
+	 * And we will print according to their type (like v1 and t2)
+	 * However, when we have one node called 'Exp', we won't be able to know in advance whether it will be variable or tempvar
+	 * And we need to pass its index into the function (i.e. the argument 'place')
+	 * In order to solve this problem, I think we can always assume it will be a temp var
+	 * And when we find out we are wrong (i.e. Exp -> ID)
+	 * We use this genBack function to decrement curTempNum and generate a new index for normal variable 
+	 * XXX: It is dangerous! 必需在调用函数的上一条语句使用genNext生成新的临时变量的对应index值，否则此处可能会出错！！！！*/
+	current--;
+	if (current < 0) {
+		/* Should never reach here */
+		printf("genBack error!\n");
+		exit(-1);
+	}
+}
+
 static InterCode genSinop(int kind, int val) {
 	InterCode newCode = (InterCode)malloc(sizeof(struct InterCode_));
 	Operand op = (Operand)malloc(sizeof(struct Operand_));
@@ -125,7 +144,26 @@ static InterCode genFunc(int op1Kind, int op2Kind, int op1Var, int op2Var) {
 	return newCode;
 }
 
-int translate_Exp(Node *exp, int place) {
+static int cond_Exp(Node *exp, int &place) {
+	label1 = genNext(curLabel);
+	label2 = genNext(curLabel);
+	/* Gen place := #0 */
+	InterCode newCode1 = genAssign(TEMPVAL, CONSTANT, place, 0);
+	newCode1->kind = ASSIGN;
+	translate_Cond(Exp, label1, label2);
+	/* Gen LABEL label1 */
+	InterCode newCode2 = genSinop(LB, label1);
+	newCode2->kind = LABEL;
+	/* Gen place := #1 */
+	InterCode newCode3 = genAssign(TEMPVAL, CONSTANT, place, 1);
+	newCode3->kind = ASSIGN;
+	/* Gen LABEL label2 */
+	InterCode newCode4 = genSinop(LB, label2);
+	newCode4->kind = LABEL;
+	return TEMPVAL;
+}
+
+int translate_Exp(Node *exp, int &place) {
 	/* Param 'varNum': the index of this variable */
 	/* Return: the 'kind' (type) of this intercode */
 	/* Current node's type is 'Exp' */
@@ -137,6 +175,10 @@ int translate_Exp(Node *exp, int place) {
 		putCode(newCode);
 		return TEMPVAL;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
+		/* Important! Usage of genBack here */
+		genBack(place);
+		place = genNext(curVarNum);
+		/*----------------------------------*/
 		FieldList var = getVar(node->lexeme.value, 0);
 		if (var.num == -1) {
 			var.num = place;
@@ -159,7 +201,7 @@ int translate_Exp(Node *exp, int place) {
 			 * Despite Exp1 must be ID 
 			 * I will pass it to translate_Exp anyway
 			 * In order to match this ID with a corresponding num */
-			int numLeft = genNext(curVarNum); /* Left is ID (variable) */
+			int numLeft = genNext(curTempNum); /* Left is ID (variable) */
 			int kindLeft = translate_Exp(node, numLeft);
 			int numRight = genNext(curTempNum);
 			int kindRight = translate_Exp(node->sibling->sibling, numRight);
@@ -192,8 +234,12 @@ int translate_Exp(Node *exp, int place) {
 				newCode->kind = DIV;
 			}
 			return TEMPVAL;
-		} else if (strcmp(type, ""))
+		} else if (strcmp(type, "RELOP") == 0
+				|| strcmp(type, "AND") == 0
+				|| strcmp(type, "OR") == 0) {
+			return cond_Exp(exp, place);
+		}
 	} else if (strcmp(node->lexeme.type, "NOT") == 0) {
-		/* TODO: */
+		return cond_Exp(exp, place);
 	}
 }
