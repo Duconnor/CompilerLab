@@ -15,6 +15,151 @@ static int curLabel = 0; /* Initialize to 0 */
 static int WIDTH = 4; /* Should be modified to proper value */
 static int OFFSET = 0;
 
+static void debug(char *str) {
+    printf("%s\n", str);
+}
+
+InterCode codesHead = NULL;
+InterCode codesTail = NULL;
+
+void putCode(InterCode ic) {
+    if(ic == NULL) {
+        debug("putCode error: ic is NULL !");
+        return;
+    }
+    if(codesHead == NULL) {
+        codesHead = ic;
+        codesTail = ic;
+        ic->prev = ic;
+        ic->next = ic;
+    }
+    else {
+        codesHead->prev = ic;
+        codesTail->next = ic;
+        ic->prev = codesTail;
+        ic->next = codesHead;
+        codesTail = ic;
+    }
+}
+
+void delCode(InterCode ic) {
+    if(ic == NULL) {
+        debug("delCode error: ic is NULL!\n");
+        return;
+    }
+    ic->prev->next = ic->next;
+    ic->next->prev = ic->prev;
+    if(codesHead == ic && codesTail == ic) {
+        codesHead = NULL;
+        codesTail = NULL;
+    }
+    else if(codesHead == ic)
+        codesHead = ic->next;
+    else
+        codesTail = ic->prev;
+    free(ic);
+}
+
+char* printOperand(Operand op) {
+    char* opStr = (char*)malloc(sizeof(char) * 10);
+    memset(opStr, 0, sizeof(opStr));
+    switch(op->kind) {
+        case TEMPVAR:
+            sprintf(opStr, "t%d", op->u.varNum);
+            break;
+        case VARIABLE:
+            sprintf(opStr, "v%d", op->u.varNum);
+            break;
+        case CONSTANT:
+            sprintf(opStr, "#%d", op->u.value);
+            break;
+    }
+    return opStr;
+}
+
+void printInterCode(InterCode ic, FILE* fp) {
+    char line[100];
+    memset(line, 0, sizeof(line));
+    switch(ic->kind){
+        case LABEL:
+            sprintf(line, "LABEL label%d :\n", ic->u.sinop.op->u.varNum);
+            break;
+        case FUNCTION:
+            sprintf(line, "FUNCTION %s :\n", ic->u.sinop.op->u.name);
+            break;
+        case ASSIGN:
+            sprintf(line, "%s := %s\n", printOperand(ic->u.assign.left), printOperand(ic->u.assign.right));
+            break;
+        case ASSIGNP:
+            sprintf(line, "%s := *%s\n", printOperand(ic->u.assign.left), printOperand(ic->u.assign.right));
+            break;
+        case PASSIGN:
+            sprintf(line, "*%s := %s\n", printOperand(ic->u.assign.left), printOperand(ic->u.assign.right));
+            break;
+        case ADD:
+            sprintf(line, "%s := %s + %s\n", printOperand(ic->u.binop.result), printOperand(ic->u.binop.op1), printOperand(ic->u.binop.op2));
+            break;
+        case SUB:
+            sprintf(line, "%s := %s - %s\n", printOperand(ic->u.binop.result), printOperand(ic->u.binop.op1), printOperand(ic->u.binop.op2));
+            break;
+        case MUL:
+            sprintf(line, "%s := %s * %s\n", printOperand(ic->u.binop.result), printOperand(ic->u.binop.op1), printOperand(ic->u.binop.op2));
+            break;
+        case DIV:
+            sprintf(line, "%s := %s / %s\n", printOperand(ic->u.binop.result), printOperand(ic->u.binop.op1), printOperand(ic->u.binop.op2));
+            break;
+        case ADDR:
+            sprintf(line, "%s := &%s + %s\n", printOperand(ic->u.binop.result), printOperand(ic->u.binop.op1), printOperand(ic->u.binop.op2));
+            break;
+        case GOTO:
+            sprintf(line, "GOTO label%d\n", ic->u.sinop.op->u.varNum);
+            break;
+        case IFGOTO:
+            sprintf(line, "IF %s %s %s GOTO label%d\n", printOperand(ic->u.triop.op1), ic->u.triop.relop, printOperand(ic->u.triop.op2), ic->u.triop.op3->u.varNum);
+            break;
+        case RETURN:
+            sprintf(line, "RETURN #%d\n", ic->u.sinop.op->u.value);
+            break;
+        case DEC:
+            sprintf(line, "DEC %s %d\n", printOperand(ic->u.dec.op1), ic->u.dec.size);
+            break;
+        case ARGV:
+            sprintf(line, "ARG %s\n", printOperand(ic->u.sinop.op));
+            break;
+        case ARGA:
+            sprintf(line, "ARG &%s\n", printOperand(ic->u.sinop.op));
+            break;
+        case CALL:
+            sprintf(line, "%s := CALL %s\n", printOperand(ic->u.call.op1), ic->u.call.op2->u.name);
+            break;
+        case PARAM:
+            sprintf(line, "PARAM %s\n", printOperand(ic->u.sinop.op));
+            break;
+        case READ:
+            sprintf(line, "READ %s\n", printOperand(ic->u.sinop.op));
+            break;
+        case WRITE:
+            sprintf(line, "WRITE %s\n", printOperand(ic->u.sinop.op));
+            break;
+        default:
+            debug("printInterCode error: bad code type!\n");
+    }
+    fputs(line, fp);
+}
+
+void printInterCodes(char* fileName) {
+    FILE *fp = fopen(fileName, "w");
+    if(fp == NULL) {
+        printf("Error: Cannot open file %s\n!", fileName);
+        exit(-1);
+    }
+    InterCode currIC = codesHead;
+    do{
+        printInterCode(currIC, fp);
+        currIC = currIC->next;
+    }while(currIC != codesHead);  
+}
+
 static int genNext(int* current) {
 	*current++;
 	if (*current < 0) {
@@ -37,7 +182,7 @@ static void genBack(int* current) {
 	 * We use this genBack function to decrement curTempNum and generate a new index for normal variable 
 	 * XXX: It is dangerous! 必需在调用函数的上一条语句使用genNext生成新的临时变量的对应index值，否则此处可能会出错！！！！*/
 	*current--;
-	if (current < 0) {
+	if (*current < 0) {
 		/* Should never reach here */
 		printf("genBack error!\n");
 		exit(-1);
@@ -136,13 +281,13 @@ static InterCode genDec(int kind, int var, int size) {
 	return newCode;
 }
 
-static InterCode genFunc(int op1Kind, int op2Kind, int op1Var, int op2Var) {
+static InterCode genCall(int op1Kind, int op2Kind, int op1Var, int op2Var) {
 	InterCode newCode = (InterCode)malloc(sizeof(struct InterCode_));
 	Operand op1 = (Operand)malloc(sizeof(struct Operand_));
 	Operand op2 = (Operand)malloc(sizeof(struct Operand_));
 
-	newCode->u.func.op1 = op1;
-	newCode->u.func.op2 = op2;
+	newCode->u.call.op1 = op1;
+	newCode->u.call.op2 = op2;
 
 	newCode->prev = newCode->next = NULL;
 
@@ -156,8 +301,8 @@ static InterCode genFunc(int op1Kind, int op2Kind, int op1Var, int op2Var) {
 }
 
 static int cond_Exp(Node *exp, int *place) {
-	int label1 = genNext(curLabel);
-	int label2 = genNext(curLabel);
+	int label1 = genNext(&curLabel);
+	int label2 = genNext(&curLabel);
 	/* Gen place := #0 */
 	InterCode newCode1 = genAssign(TEMPVAR, CONSTANT, *place, 0);
 	newCode1->kind = ASSIGN;
@@ -244,8 +389,8 @@ int translate_Exp(Node *exp, int *place) {
 		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
 		/* Important! Usage of genBack here */
-		genBack(curTempNum);
-		*place = genNext(curVarNum);
+		genBack(&curTempNum);
+		*place = genNext(&curVarNum);
 		/*----------------------------------*/
 		FieldList var = getVar(node->lexeme.value, 0);
 		if (var->num == -1) {
@@ -257,7 +402,7 @@ int translate_Exp(Node *exp, int *place) {
 		}
 		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
-		int num = genNext(curTempNum);
+		int num = genNext(&curTempNum);
 		/* Now we are at 'MINUS', its child is 'Exp1' */
 		int kind = translate_Exp(node->sibling, num);
 		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAR, 0, num, *place);
@@ -271,9 +416,9 @@ int translate_Exp(Node *exp, int *place) {
 			 * Despite Exp1 must be ID 
 			 * I will pass it to translate_Exp anyway
 			 * In order to match this ID with a corresponding num */
-			int numLeft = genNext(curTempNum);
+			int numLeft = genNext(&curTempNum);
 			int kindLeft = translate_Exp(node, numLeft);
-			int numRight = genNext(curTempNum);
+			int numRight = genNext(&curTempNum);
 			int kindRight = translate_Exp(node->sibling->sibling, numRight);
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
 			newCode->kind = ASSIGN;
@@ -287,9 +432,9 @@ int translate_Exp(Node *exp, int *place) {
 				|| strcmp(type, "STAR") == 0
 				|| strcmp(type, "DIV") == 0) {
 			/* Case for arithmetic operation */ 
-			int num1 = genNext(curTempNum);
+			int num1 = genNext(&curTempNum);
 			int kind1 = translate_Exp(node, num1);
-			int num2 = genNext(curTempNum);
+			int num2 = genNext(&curTempNum);
 			int kind2 = translate_Exp(node->sibling->sibling, num2);
 			InterCode newCode = genBinop(kind1, kind2, TEMPVAR, num1, num2, *place);
 			putCode(newCode);
@@ -319,7 +464,7 @@ int translate_Exp(Node *exp, int *place) {
 				exit(-1);
 			}
 			/* First, find the start address */
-			int tempStartAddr = genNext(curTempNum);
+			int tempStartAddr = genNext(&curTempNum);
 			int kindStartAddr = translate_Exp(node, tempStartAddr);
 
 			int bracketNum = getArraySize(node->sibling->sibling);
@@ -328,7 +473,7 @@ int translate_Exp(Node *exp, int *place) {
 			WIDTH = findWidth(node->child->lexeme.value);
 			/* Finally, combine them to get the address of the value we need 
 			 * In the intercode: t = v_{start} + index * WIDTH */
-			int tempAddr = genNext(curTempNum);
+			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, bracketNum * WIDTH, tempAddr);
 			newCode1->kind = ADD;
 			putCode(newCode1);
@@ -341,12 +486,12 @@ int translate_Exp(Node *exp, int *place) {
 		} else if (strcmp(type, "DOT") == 0) {
 			/* For structure */
 			/* First, find the start address */
-			int tempStartAddr = genNext(curTempNum);
+			int tempStartAddr = genNext(&curTempNum);
 			int kindStartAddr = translate_Exp(node, tempStartAddr);
 			/* Second, get the offset of the member */
 			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme.value);
 			/* Third, get the address of the memeber */
-			int tempAddr = genNext(curTempNum);
+			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
 			newCode1->kind = ADD;
 			putCode(newCode1);

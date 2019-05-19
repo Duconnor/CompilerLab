@@ -22,7 +22,7 @@ struct InterCode_ {
 		//For IFGOTO : if op1 relop op2, then goto op3
 		struct { Operand op1, op2, op3; char* relop; } triop;
 		struct { Operand op1; int size; } dec;
-		struct { Operand op1, op2; } func;
+		struct { Operand op1, op2; } call;
 	} u;
 	InterCode prev;
 	InterCode next;
