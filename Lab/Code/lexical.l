@@ -74,7 +74,7 @@ SPACE [ \t\r]
 {SEMI} { yylval.type_node = initNode("SEMI", NULL, yylineno); return SEMI; }
 {COMMA} { yylval.type_node = initNode("COMMA", NULL, yylineno); return COMMA; }
 {ASSIGNOP} { yylval.type_node = initNode("ASSIGNOP", NULL, yylineno); return ASSIGNOP; }
-{RELOP} { yylval.type_node = initNode("RELOP", NULL, yylineno); return RELOP; }
+{RELOP} { yylval.type_node = initNode("RELOP", yytext, yylineno); return RELOP; }
 {PLUS} { yylval.type_node = initNode("PLUS", NULL, yylineno); return PLUS; }
 {MINUS} { yylval.type_node = initNode("MINUS", NULL, yylineno); return MINUS; }
 {STAR} { yylval.type_node = initNode("STAR", NULL, yylineno); return STAR; }
