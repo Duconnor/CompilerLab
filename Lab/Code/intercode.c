@@ -325,10 +325,8 @@ static int cond_Exp(Node *exp, int *place) {
 static int getArraySize(Node *exp) {
 	Node *node = exp->child;
 	if (strcmp(node->lexeme.type, "INT") != 0) {
-		/* Should never reach here 
-		 * Or it will have grammar error */
-		printf("getArraySize error!\n");
-		exit(-1);
+		/* Means we are using variable to index the array */
+		return -1;
 	}
 	return atoi(node->lexeme.value);
 }
@@ -389,21 +387,54 @@ int translate_Exp(Node *exp, int *place) {
 		putCode(newCode);
 		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
-		if(place == NULL)
-			return -1;
-		/* Important! Usage of genBack here */
-		genBack(&curTempNum);
-		*place = genNext(&curVarNum);
-		/*----------------------------------*/
-		FieldList var = getVar(node->lexeme.value, 0);
-		if (var->num == -1) {
-			var->num = *place;
+		if (node->sibling == NULL) {
+			if(place == NULL)
+				return -1;
+			/* Important! Usage of genBack here */
+			genBack(&curTempNum);
+			*place = genNext(&curVarNum);
+			/*----------------------------------*/
+			FieldList var = getVar(node->lexeme.value, 0);
+			if (var->num == -1) {
+				var->num = *place;
+			} else {
+				/* This means we have alreay associated one index for this var */
+				genBack(curVarNum); /* Put this var index back */
+				*place = var->num;
+			}
+			return VARIABLE;
+		} else if (strcmp(node->sibling->sibling->lexeme.type, "Args") != 0) {
+			if (strcmp(node->lexeme.value, "READ") == 0) {
+				InterCode callRead = genSinop(TEMPVAR, *place);
+				callRead->kind = READ;
+				putCode(callRead);
+			} else {
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
+				callFunc->kind = CALL;
+				putCode(callFunc);
+			}
+			return TEMPVAR;
 		} else {
-			/* This means we have alreay associated one index for this var */
-			genBack(curVarNum); /* Put this var index back */
-			*place = var->num;
+			/* A little modification 
+			 * We generate the 'ARG XX' at the same time we translate Args 
+			 * But we use two different functions
+			 * 1. translate_Args for normal function 
+			 * 2. translate_ArgsWrite for write(x) */
+			if (strcmp(node->lexeme.value, "WRITE") == 0) {
+				int tempVar = genNext(&curTempNum);
+				int kind = translate_ArgsWrite(node->sibling->sibling, &tempVar);
+				InterCode callWrite = genSinop(kind, &tempVar);
+				callWrite->kind = WRITE;
+				putCode(callWrite);
+			} else {
+				translate_Args(node->sibling->sibling);
+				/* In the above function, it will generate a bunch of ARG XX*/
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
+				callFunc->kind = CALL;
+				putCode(callFunc);
+			}
+			return TEMPVAR;
 		}
-		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
 		if(place == NULL)
 			return -1;
@@ -471,26 +502,48 @@ int translate_Exp(Node *exp, int *place) {
 				return -1;
 			/* For array */
 			/* Because we don't support multi-dimensinal array
-			 * Exp -> Exp1 LB Exp2 RB 
-			 * Exp1 must be of type 'ID' */
-			if (strcmp(node->child->lexeme.type, "ID") != 0) {
+			 * Exp -> Exp1 LB Exp2 RB */
+			if (strcmp(node->child->lexeme.type, "Exp") == 0
+					&& strcmp(node->child->sibling->lexeme.type, "LB") == 0) {
 				/* Case when we encounter a multi dim array */
 				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
 				exit(-1);
 			}
 			/* First, find the start address */
-			int tempStartAddr = genNext(&curTempNum);
-			int kindStartAddr = translate_Exp(node, &tempStartAddr);
+			int tempFirstElem = genNext(&curTempNum);
+			int kindFirstElem = translate_Exp(node, &tempFirstElem);
+			/* If Exp1 -> Exp2 DOT ID 
+			 * Then we will get the first element in the array stored at t_{tempStartAddr}
+			 * */
+			/* XXX: Correct?
+			 * If Exp1 -> ID
+			 * Then we will still get the first element 
+			 * */
 
 			int bracketNum = getArraySize(node->sibling->sibling);
 			/* bracketNum is the index */
 			/* Determine the WIDTH here! */
 			WIDTH = findWidth(node->child->lexeme.value);
 			/* Finally, combine them to get the address of the value we need 
-			 * In the intercode: t = v_{start} + index * WIDTH */
+			 * In the intercode: t = &v_{start} + index * WIDTH */
 			int tempAddr = genNext(&curTempNum);
-			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, bracketNum * WIDTH, tempAddr);
-			newCode1->kind = ADD;
+			InterCode newCode1 = NULL;
+			if (bracketNum != -1) {
+				newCode1 = genBinop(kindFirstElem, CONSTANT, TEMPVAR, tempFirstElem, bracketNum * WIDTH, tempAddr);
+			} else {
+				/* Case when we use var to index an array 
+				 * We need first generate t = v * WIDTH
+				 * And then generate x = &y + t 
+				 * */
+				int tempIndex = genNext(&curTempNum);
+				int kindIndex = translate_Exp(node->sibling->sibling, &tempIndex);
+				int tempOffset = genNext(&curTempNum);
+				InterCode tempNewCode = genBinop(kindIndex, CONSTANT, TEMPVAR, tempIndex, WIDTH, tempOffset);
+				tempNewCode->kind = MUL;
+				putCode(tempNewCode);
+				newCode1 = genBinop(kindFirstElem, TEMPVAR, TEMPVAR, tempFirstElem, tempOffset, tempAddr);
+			}
+			newCode1->kind = ADDR; /* ADDR for: x = &y + WIDTH * index */
 			putCode(newCode1);
 			/* Associate place with the result */
 			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
@@ -582,6 +635,41 @@ void translate_Cond(Node *exp, int label_true, int label_false) {
 		newCode2->kind = GOTO;
 		putCode(newCode2);
 	} 
+}
+
+int translate_ArgsWrite(Node *args, int *place) {
+	/* Function write(x) takes only one argument */
+	return translate_Exp(args->child, place);
+}
+
+void translate_Args(Node *args) {
+	int tempVar = genNext(&curTempNum);
+	int kind = translate_Exp(args->child, &tempVar);
+	/* Deal with case when the argument is a structure */
+	if (strcmp(args->child->child->lexeme.type, "ID") == 0) {
+		FieldList var = getVar(args->child->child->lexeme.value, 0);
+		if (var->type->kind == STRUCTURE) {
+			InterCode strucParam = genSinop(kind, tempVar);
+			strucParam->kind = ARGA;
+			putCode(strucParam);
+			if (args->child->sibling != NULL) {
+				translate_Args(args->child->sibling->sibling);
+				return;
+			} else {
+				return;
+			}
+		}
+	}
+	InterCode param = genSinop(kind, tempVar);
+	param->kind = ARGV;
+	putCode(param);
+	if (args->child->sibling != NULL) {
+		translate_Args(args->child->sibling->sibling);
+	}
+}
+
+void translate_Cond(Node *exp, int label1, int label2) {
+	/* TODO: implement me! */
 }
 
 void translate_Stmt(Node *stmt) {
@@ -769,3 +857,45 @@ void translate_Dec(Node *dec) {
 	
 	}
 }	
+void translate_Program(Node *program) {
+	translate_ExtDefList(program->child);
+}
+
+void translate_ExtDefList(Node *extDefList) {
+	translate_ExtDef(extDefList->child);
+	translate_ExtDefList(extDefList->child->sibling);
+}
+
+void translate_ExtDef(Node *extDef) {
+	/* Since there is no global vars, we only need to translate function definitions */
+	char *type = extDef->child->sibling->lexeme.type;
+	if (strcmp(type, "FunDec") == 0) {
+		/* Also, in function definition, we don't need to care about the translation of Specifier */
+		translate_FunDec(extDef->child->sibling);
+		translate_CompSt(extDef->child->sibling->sibling);
+	}
+}
+
+void translate_FunDec(Node *funDec) {
+	/* There are only two possible cases 
+	 * 1. FunDec -> ID LP VarList RP 
+	 * 2. FunDec -> ID LP RP 
+	 * */
+	/* Translate ID first, then we translate VarList */
+	InterCode newCode = genSinop(FUNC, funDec->child->lexeme.value);
+	newCode->kind = FUNCTION;
+	putCode(newCode);
+	/* Now translate VarList */
+	if (strcmp(funDec->child->sibling->sibling, "VarList") == 0) {
+		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
+		FieldList params = func->type->u.function->parameters;
+		while (params != NULL) {
+			int varNum = genNext(&curVarNum);
+			params->num = varNum;
+			InterCode paramDec = genSinop(VARIABLE, varNum);
+			paramDec->kind = PARAM;
+			putCode(paramDec);
+			params = params->tail;
+		}
+	}
+}
