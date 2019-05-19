@@ -3,6 +3,7 @@
 #include "tree.h"
 #include "semantic.h"
 #include "table.h"
+#include "intercode.h"
 
 extern FILE *yyin;
 extern int yylineno;
@@ -29,10 +30,12 @@ int main(int argc, char **argv) {
 		initTable();
 		
 		if(aErrorFree && bErrorFree) {
-			printTree(tree);
-			printf("\n");
+			//printTree(tree);
+			//printf("\n");
 			Program(tree);
+			printInterCodes(argv[2]);
 		}
+
 		destroyTree(tree);
 
 		return 0;

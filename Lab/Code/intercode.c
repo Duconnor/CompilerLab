@@ -307,7 +307,7 @@ static int cond_Exp(Node *exp, int *place) {
 	InterCode newCode1 = genAssign(TEMPVAR, CONSTANT, *place, 0);
 	newCode1->kind = ASSIGN;
 	putCode(newCode1);
-	translate_Cond(Exp, label1, label2);
+	translate_Cond(exp, label1, label2);
 	/* Gen LABEL label1 */
 	InterCode newCode2 = genSinop(LB, label1);
 	newCode2->kind = LABEL;
@@ -382,12 +382,16 @@ int translate_Exp(Node *exp, int *place) {
 	/* Current node's type is 'Exp' */
 	Node *node = exp->child;
 	if (strcmp(node->lexeme.type, "INT") == 0) {
+		if(place == NULL)
+			return -1;
 		int value = atoi(node->lexeme.value);
 		InterCode newCode = genAssign(TEMPVAR, CONSTANT, *place, value);
-		newCode->kind = ASSIGN; // Redundant here?
+		newCode->kind = ASSIGN;
 		putCode(newCode);
 		return TEMPVAR;
 	} else if (strcmp(node->lexeme.type, "ID") == 0) {
+		if(place == NULL)
+			return -1;
 		/* Important! Usage of genBack here */
 		genBack(&curTempNum);
 		*place = genNext(&curVarNum);
@@ -402,9 +406,11 @@ int translate_Exp(Node *exp, int *place) {
 		}
 		return VARIABLE;
 	} else if (strcmp(node->lexeme.type, "MINUS") == 0) {
+		if(place == NULL)
+			return -1;
 		int num = genNext(&curTempNum);
 		/* Now we are at 'MINUS', its child is 'Exp1' */
-		int kind = translate_Exp(node->sibling, num);
+		int kind = translate_Exp(node->sibling, &num);
 		InterCode newCode = genBinop(CONSTANT, kind, TEMPVAR, 0, num, *place);
 		newCode->kind = SUB; /* place := #0 - t_num */
 		putCode(newCode);
@@ -417,25 +423,31 @@ int translate_Exp(Node *exp, int *place) {
 			 * I will pass it to translate_Exp anyway
 			 * In order to match this ID with a corresponding num */
 			int numLeft = genNext(&curTempNum);
-			int kindLeft = translate_Exp(node, numLeft);
+			int kindLeft = translate_Exp(node, &numLeft);
 			int numRight = genNext(&curTempNum);
-			int kindRight = translate_Exp(node->sibling->sibling, numRight);
+			int kindRight = translate_Exp(node->sibling->sibling, &numRight);
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
 			newCode->kind = ASSIGN;
 			putCode(newCode);
-			InterCode newCode2 = genAssign(TEMPVAR, kindLeft, *place, numLeft);
-			newCode2->kind = ASSIGN;
-			putCode(newCode2);
-			return TEMPVAR;
+			if(place != NULL) {
+				InterCode newCode2 = genAssign(TEMPVAR, kindLeft, *place, numLeft);
+				newCode2->kind = ASSIGN;
+				putCode(newCode2);
+				return TEMPVAR;
+			}
+			else
+				return -1;
 		} else if (strcmp(type, "PLUS") == 0 
 				|| strcmp(type, "MINUS") == 0
 				|| strcmp(type, "STAR") == 0
 				|| strcmp(type, "DIV") == 0) {
+			if(place == NULL)
+				return -1;
 			/* Case for arithmetic operation */ 
 			int num1 = genNext(&curTempNum);
-			int kind1 = translate_Exp(node, num1);
+			int kind1 = translate_Exp(node, &num1);
 			int num2 = genNext(&curTempNum);
-			int kind2 = translate_Exp(node->sibling->sibling, num2);
+			int kind2 = translate_Exp(node->sibling->sibling, &num2);
 			InterCode newCode = genBinop(kind1, kind2, TEMPVAR, num1, num2, *place);
 			putCode(newCode);
 			/* Now, we determine the 'kind' of 'newCode' */
@@ -452,8 +464,12 @@ int translate_Exp(Node *exp, int *place) {
 		} else if (strcmp(type, "RELOP") == 0
 				|| strcmp(type, "AND") == 0
 				|| strcmp(type, "OR") == 0) {
+			if(place == NULL)
+				return -1;
 			return cond_Exp(exp, place);
 		} else if (strcmp(type, "LB") == 0) {
+			if(place == NULL)
+				return -1;
 			/* For array */
 			/* Because we don't support multi-dimensinal array
 			 * Exp -> Exp1 LB Exp2 RB 
@@ -465,7 +481,7 @@ int translate_Exp(Node *exp, int *place) {
 			}
 			/* First, find the start address */
 			int tempStartAddr = genNext(&curTempNum);
-			int kindStartAddr = translate_Exp(node, tempStartAddr);
+			int kindStartAddr = translate_Exp(node, &tempStartAddr);
 
 			int bracketNum = getArraySize(node->sibling->sibling);
 			/* bracketNum is the index */
@@ -484,10 +500,12 @@ int translate_Exp(Node *exp, int *place) {
 			/* Return type is TEMPVAR */
 			return TEMPVAR;
 		} else if (strcmp(type, "DOT") == 0) {
+			if(place == NULL)
+				return -1;
 			/* For structure */
 			/* First, find the start address */
 			int tempStartAddr = genNext(&curTempNum);
-			int kindStartAddr = translate_Exp(node, tempStartAddr);
+			int kindStartAddr = translate_Exp(node, &tempStartAddr);
 			/* Second, get the offset of the member */
 			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme.value);
 			/* Third, get the address of the memeber */
@@ -502,8 +520,31 @@ int translate_Exp(Node *exp, int *place) {
 			return TEMPVAR;
 		}
 	} else if (strcmp(node->lexeme.type, "NOT") == 0) {
+		if(place == NULL)
+			return -1;
 		return cond_Exp(exp, place);
 	}
 }
 
+void translate_Cond(Node *exp, int label1, int label2) {
+	/* TODO: implement me! */
+}
+
+void translate_Stmt(Node *stmt) {
+	Node *node = stmt->child;
+	if (strcmp(node->lexeme.type, "Exp") == 0) {
+		/* Case for production: Stmt -> Exp SEMI */
+		translate_Exp(node, NULL);
+	}
+	else if(strcmp(node->lexeme.type, "CompSt") == 0) {
+		translate_CompSt(node);
+	}
+	else if(strcmp(node->lexeme.type, "RETURN") == 0) {
+		
+	}
+}
+
+void translate_CompSt(Node *compst) {
+	/* TODO: implement me! */
+}
 

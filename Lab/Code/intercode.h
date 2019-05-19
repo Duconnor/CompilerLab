@@ -28,4 +28,6 @@ struct InterCode_ {
 	InterCode next;
 };
 
+void printInterCodes(char* fileName);
+
 #endif
