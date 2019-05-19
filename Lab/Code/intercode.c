@@ -733,6 +733,39 @@ void translate_Dec(Node *dec) {
 		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
 			/* Case for production VarDec -> ID */
 			/* No need to generate any code */
+		} else {
+			/* Case for production VarDec -> VarDec LB INT RB 
+			 * and then
+			 * VarDec -> ID */
+			Node *vardec1 = vardec->child;
+			Node *id = vardec1->child;
+			FieldList var = getVar(id->lexeme.value, 0);
+			if(var->num == -1) 
+				var->num = genNext(&curVarNum);
+			int newVarNum = var->num;
+			/* No Array of Structure */
+			int size = atoi(vardec1->sibling->sibling->lexeme.value) * 4;
+			InterCode newCode = genDec(VARIABLE, newVarNum, size);
+			putCode(newCode);
 		}
+	} else {
+		/* Case for production: Dec -> VarDec ASSIGNOP Exp*/
+		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
+			Node *id = vardec->child;
+			Node *exp = vardec->sibling->sibling;
+			FieldList var = getVar(id->lexeme.value, 0);
+			if(var->num == -1)
+				var->num = genNext(&curVarNum);
+			int num1 = var->num;
+			int num2 = genNext(&curTempNum);
+			int kind2 = translate_Exp(exp, &num2);
+			InterCode newCode = genAssign(VARIABLE, kind2, num1, num2);
+			newCode->kind = ASSIGN;
+			putCode(newCode);
+		} else {
+			/* Can not assign for an array */
+			/* Should not reach here! */
+		}
+	
 	}
 }	
