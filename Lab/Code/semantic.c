@@ -251,6 +251,7 @@ FieldList VarDec(Type type, Node *root) {
 		newVar->name = root->child->lexeme.value;
 		newVar->type = type;
 		newVar->num = -1;
+		newVar->isAddress = 0;
 
 		/* Return immediately since there is no more child */
 		return newVar;
@@ -298,6 +299,7 @@ FieldList FunDec(Type type, Node *root) {
     newVar->type = (Type)malloc(sizeof(struct Type_));
     newVar->type->kind = FUNCTION;
 	newVar->num = -1;
+	newVar->isAddress = 0;
     Function newFunc = (Function)malloc(sizeof(struct Function_));
     newVar->type->u.function = newFunc;
     newFunc->isDeclared = 1;
@@ -346,6 +348,7 @@ FieldList ParamDec(Node *root, char *name) {
 	root = root->child->sibling;
 	FieldList newParam = VarDec(paramType, root);
 	newParam->type->funcName = name;
+	newParam->isAddress = 1; /* Only for structure */
 
 	/* Insert newParam into the symbol table */
 	FieldList varChecker = getVar(newParam->name, newParam->type->kind);

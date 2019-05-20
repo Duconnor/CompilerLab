@@ -22,6 +22,7 @@ struct Type_ {
 struct FieldList_ {
     char* name;
 	int num; /* This vars' corresponding index (added in Lab3) */
+	int isAddress; /* Is this var address or variable */
     Type type;
     FieldList tail;
 };

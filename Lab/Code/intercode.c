@@ -14,6 +14,8 @@ static int curLabel = 0; /* Initialize to 0 */
 static int WIDTH = 4; /* Should be modified to proper value */
 static int OFFSET = 0;
 
+static int getAddr = 0;
+
 static void debug(char *str) {
     printf("%s", str);
 }
@@ -72,6 +74,8 @@ char* printOperand(Operand op) {
         case CONSTANT:
             sprintf(opStr, "#%d", op->u.value);
             break;
+		case AORS:
+			sprintf(opStr, "t%d", op->u.varNum);
     }
     return opStr;
 }
@@ -741,10 +745,24 @@ int translate_Exp(Node *exp, int *place) {
 			 * In order to match this ID with a corresponding num */
 			int numLeft = genNext(&curTempNum);
 			int kindLeft = translate_Exp(node, &numLeft);
+			if (kindLeft == AORS) {
+				/* If an array element or struture element appears on the left of a ASSIGN operation 
+				 * It means we want to change the value in that array or structure, not the value of that temp var
+				 * So, we need to get its address first */
+				int tempAddr = genNext(&curTempNum);
+				getAddr = 1;
+				translate_Exp(node, &tempAddr);
+				getAddr = 0;
+				numLeft = tempAddr;
+			}
 			int numRight = genNext(&curTempNum);
 			int kindRight = translate_Exp(node->sibling->sibling, &numRight);
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
-			newCode->kind = ASSIGN;
+			if (kindLeft == AORS) {
+				newCode->kind = PASSIGN;
+			} else {
+				newCode->kind = ASSIGN;
+			}
 			putCode(newCode);
 			if(place != NULL) {
 				InterCode newCode2 = genAssign(TEMPVAR, kindLeft, *place, numLeft);
@@ -816,7 +834,12 @@ int translate_Exp(Node *exp, int *place) {
 			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = NULL;
 			if (bracketNum != -1) {
-				newCode1 = genBinop(kindFirstElem, CONSTANT, TEMPVAR, tempFirstElem, bracketNum * WIDTH, tempAddr);
+				if (getAddr) {
+					genBack(&curTempNum);
+					newCode1 = genBinop(kindFirstElem, CONSTANT, TEMPVAR, tempFirstElem, bracketNum * WIDTH, *place);
+				} else {
+					newCode1 = genBinop(kindFirstElem, CONSTANT, TEMPVAR, tempFirstElem, bracketNum * WIDTH, tempAddr);
+				}
 			} else {
 				/* Case when we use var to index an array 
 				 * We need first generate t = v * WIDTH
@@ -828,16 +851,22 @@ int translate_Exp(Node *exp, int *place) {
 				InterCode tempNewCode = genBinop(kindIndex, CONSTANT, TEMPVAR, tempIndex, WIDTH, tempOffset);
 				tempNewCode->kind = MUL;
 				putCode(tempNewCode);
-				newCode1 = genBinop(kindFirstElem, TEMPVAR, TEMPVAR, tempFirstElem, tempOffset, tempAddr);
+				if (getAddr) {
+					newCode1 = genBinop(kindFirstElem, TEMPVAR, TEMPVAR, tempFirstElem, tempOffset, *place);
+				} else {
+					newCode1 = genBinop(kindFirstElem, TEMPVAR, TEMPVAR, tempFirstElem, tempOffset, tempAddr);
+				}
 			}
 			newCode1->kind = ADDR; /* ADDR for: x = &y + WIDTH * index */
 			putCode(newCode1);
-			/* Associate place with the result */
-			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
-			newCode2->kind = ASSIGNP;
-			putCode(newCode2);
-			/* Return type is TEMPVAR */
-			return TEMPVAR;
+			if (!getAddr) {
+				/* Associate place with the result */
+				InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
+				newCode2->kind = AORS;
+				putCode(newCode2);
+			}
+			/* Return type is AORS */
+			return AORS;
 		} else if (strcmp(type, "DOT") == 0) {
 			if(place == NULL)
 				return -1;
@@ -850,14 +879,28 @@ int translate_Exp(Node *exp, int *place) {
 			OFFSET = findOffset(var->type->u.structure->name, node->sibling->sibling->lexeme.value);
 			/* Third, get the address of the memeber */
 			int tempAddr = genNext(&curTempNum);
-			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
-			newCode1->kind = ADD;
+			InterCode newCode1 = NULL;
+			if (getAddr) {
+				genBack(&curTempNum);
+				newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, *place);
+			} else {
+				newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
+			}
+			/* Assuming Exp -> ID is alwats true */
+			char *varName = node->child->lexeme.value;
+			FieldList structVar = getVar(varName, 0);
+			if (structVar->isAddress)
+				newCode1->kind = ADD;
+			else
+				newCode1->kind = ADDR;
 			putCode(newCode1);
-			/* Finally, get the member from that address */
-			InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
-			newCode2->kind = ASSIGNP;
-			putCode(newCode2);
-			return TEMPVAR;
+			if (!getAddr) {
+				/* Finally, get the member from that address */
+				InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
+				newCode2->kind = ASSIGNP;
+				putCode(newCode2);
+			}
+			return AORS;
 		}
 	} else if (strcmp(node->lexeme.type, "NOT") == 0) {
 		if(place == NULL)

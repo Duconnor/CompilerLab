@@ -7,7 +7,8 @@ typedef struct Operand_* Operand;
 typedef struct InterCode_* InterCode;
 
 struct Operand_ {
-	enum { TEMPVAR, VARIABLE, CONSTANT, LB, FUNC, ADDRESS } kind;
+	/* AORS stands for: array or structure */
+	enum { TEMPVAR, VARIABLE, CONSTANT, LB, FUNC, AORS } kind;
 	union {
 		int varNum;
 		int value;
