@@ -62,7 +62,7 @@ void initTable(){
 	argType->kind = BASIC;
 	argType->u.basic = 0;
 	singleArg->type = argType;
-	newFunc2->parameters = NULL;
+	newFunc2->parameters = singleArg;
 	putVar(newFuncVar2);
 }
 

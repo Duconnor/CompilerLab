@@ -30,8 +30,8 @@ int main(int argc, char **argv) {
 		initTable();
 		
 		if(aErrorFree && bErrorFree) {
-			//printTree(tree);
-			//printf("\n");
+			printTree(tree);
+			printf("\n");
 			Program(tree);
 			translate_Program(tree);
 			printInterCodes(argv[2]);

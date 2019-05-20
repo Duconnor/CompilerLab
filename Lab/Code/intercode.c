@@ -84,7 +84,7 @@ void printInterCode(InterCode ic, FILE* fp) {
             sprintf(line, "LABEL label%d :\n", ic->u.sinop.op->u.varNum);
             break;
         case FUNCTION_IC:
-            sprintf(line, "FUNCTION_IC %s :\n", ic->u.sinop.op->u.name);
+            sprintf(line, "FUNCTION %s :\n", ic->u.sinop.op->u.name);
             break;
         case ASSIGN:
             sprintf(line, "%s := %s\n", printOperand(ic->u.assign.left), printOperand(ic->u.assign.right));
@@ -117,7 +117,7 @@ void printInterCode(InterCode ic, FILE* fp) {
             sprintf(line, "IF %s %s %s GOTO label%d\n", printOperand(ic->u.triop.op1), ic->u.triop.relop, printOperand(ic->u.triop.op2), ic->u.triop.op3->u.varNum);
             break;
         case RETURN:
-            sprintf(line, "RETURN #%d\n", ic->u.sinop.op->u.value);
+            sprintf(line, "RETURN %s\n", printOperand(ic->u.sinop.op));
             break;
         case DEC:
             sprintf(line, "DEC %s %d\n", printOperand(ic->u.dec.op1), ic->u.dec.size);
@@ -160,7 +160,7 @@ void printInterCodes(char* fileName) {
 }
 
 static int genNext(int* current) {
-	*current++;
+	(*current)++;
 	if (*current < 0) {
 		/* Overflow */
 		printf("Can't generate more!\n");
@@ -180,7 +180,7 @@ static void genBack(int* current) {
 	 * And when we find out we are wrong (i.e. Exp -> ID)
 	 * We use this genBack function to decrement curTempNum and generate a new index for normal variable 
 	 * XXX: It is dangerous! 必需在调用函数的上一条语句使用genNext生成新的临时变量的对应index值，否则此处可能会出错！！！！*/
-	*current--;
+	(*current)--;
 	if (*current < 0) {
 		/* Should never reach here */
 		printf("genBack error!\n");
@@ -397,8 +397,13 @@ void translate_Program(Node *program) {
 
 void translate_ExtDefList(Node *extDefList) {
 	debug("translate_ExtDefList\n");
-	translate_ExtDef(extDefList->child);
-	translate_ExtDefList(extDefList->child->sibling);
+	Node *node = extDefList->child;
+	if(node != NULL) {
+		translate_ExtDef(node);
+		translate_ExtDefList(node->sibling);
+	} else {
+		/* Do nothing */
+	}
 }
 
 void translate_ExtDef(Node *extDef) {
@@ -563,7 +568,7 @@ void translate_DefList(Node *deflist) {
 	Node *node = deflist->child;
 	if(node != NULL) {
 		translate_Def(node);
-		translate_DefList(node);
+		translate_DefList(node->sibling);
 	} else {
 		/* Do nothing */
 	}
@@ -577,12 +582,18 @@ void translate_Def(Node *def) {
 
 void translate_DecList(Node *declist) {
 	debug("translate_DecList\n");
+	if(declist == NULL)
+		debug("NULL HERE 1!\n");
 	Node *node = declist->child;
+	if(node == NULL)
+		debug("NULL HERE 2!\n");
 	if(node->sibling == NULL) {
 		translate_Dec(node);
 	}
 	else {
 		translate_Dec(node);
+		if(node->sibling->sibling == NULL)
+			debug("NULL HERE 3!\n");
 		translate_DecList(node->sibling->sibling);
 	}
 }
@@ -666,7 +677,7 @@ int translate_Exp(Node *exp, int *place) {
 			}
 			return VARIABLE;
 		} else if (strcmp(node->sibling->sibling->lexeme.type, "Args") != 0) {
-			if (strcmp(node->lexeme.value, "READ") == 0) {
+			if (strcmp(node->lexeme.value, "read") == 0) {
 				InterCode callRead = genSinop(TEMPVAR, *place);
 				callRead->kind = READ;
 				putCode(callRead);
@@ -682,7 +693,7 @@ int translate_Exp(Node *exp, int *place) {
 			 * But we use two different functions
 			 * 1. translate_Args for normal function 
 			 * 2. translate_ArgsWrite for write(x) */
-			if (strcmp(node->lexeme.value, "WRITE") == 0) {
+			if (strcmp(node->lexeme.value, "write") == 0) {
 				int tempVar = genNext(&curTempNum);
 				int kind = translate_ArgsWrite(node->sibling->sibling, &tempVar);
 				InterCode callWrite = genSinop(kind, tempVar);
@@ -854,9 +865,13 @@ void translate_Cond(Node *exp, int label_true, int label_false) {
 			int kind2 = translate_Exp(exp2, &num2);
 			char *relop = node->sibling->lexeme.value;
 			
-			InterCode newCode = genTriop(kind1, kind2, LB, num1, num2, label_true, relop);
-			newCode->kind = IFGOTO;
-			putCode(newCode);
+			InterCode newCode1 = genTriop(kind1, kind2, LB, num1, num2, label_true, relop);
+			newCode1->kind = IFGOTO;
+			putCode(newCode1);
+
+			InterCode newCode2 = genSinop(LB, label_false);
+			newCode2->kind = GOTO;
+			putCode(newCode2);
 		}
 		else if(strcmp(node->sibling->lexeme.type, "AND") == 0) {
 			/* Case for production: Exp -> Exp AND Exp */
