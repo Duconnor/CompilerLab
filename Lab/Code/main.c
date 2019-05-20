@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
 			//printTree(tree);
 			//printf("\n");
 			Program(tree);
+			translate_Program(tree);
 			printInterCodes(argv[2]);
 		}
 

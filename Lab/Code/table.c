@@ -1,6 +1,7 @@
 #include "table.h"
 #include "semantic.h"
 #include <string.h>
+#include <stdlib.h>
 
 FieldList varTable[TABLE_SIZE]; 
 FieldList fieldTable[TABLE_SIZE];
@@ -19,6 +20,50 @@ unsigned int hash(char* name){
 void initTable(){
     memset(varTable, 0, sizeof(varTable));
     memset(structTable, 0, sizeof(structTable));
+	
+	/* Add function READ */
+	FieldList newFuncVar1 = (FieldList)malloc(sizeof(struct FieldList_));
+	newFuncVar1->name = "read";
+	newFuncVar1->type = (Type)malloc(sizeof(struct Type_));
+	newFuncVar1->type->kind = FUNCTION;
+	newFuncVar1->type->funcName = "read";
+	newFuncVar1->num = -1;
+	Function newFunc1 = (Function)malloc(sizeof(struct Function_));
+	newFuncVar1->type->u.function = newFunc1;
+	newFunc1->isDeclared = 1;
+	newFunc1->isDefined = 1;
+	newFunc1->linenum = -1;
+	Type retType1 = (Type)malloc(sizeof(struct Type_));
+	retType1->kind = BASIC;
+	retType1->u.basic = 0;
+	newFunc1->retVal = retType1;
+	newFunc1->parameters = NULL;
+	putVar(newFuncVar1);
+
+	/* Add function WRITE */
+	FieldList newFuncVar2 = (FieldList)malloc(sizeof(struct FieldList_));
+	newFuncVar2->name = "write";
+	newFuncVar2->type = (Type)malloc(sizeof(struct Type_));
+	newFuncVar2->type->kind = FUNCTION;
+	newFuncVar2->type->funcName = "write";
+	newFuncVar2->num = -1;
+	Function newFunc2 = (Function)malloc(sizeof(struct Function_));
+	newFuncVar2->type->u.function = newFunc2;
+	newFunc2->isDeclared = 1;
+	newFunc2->isDefined = 1;
+	newFunc2->linenum = -1;
+	Type retType2 = (Type)malloc(sizeof(struct Type_));
+	retType2->kind = BASIC;
+	retType2->u.basic = 0;
+	newFunc2->retVal = retType1;
+	FieldList singleArg = (FieldList)malloc(sizeof(struct FieldList_));
+	singleArg->tail = NULL;
+	Type argType = (Type)malloc(sizeof(struct Type_));
+	argType->kind = BASIC;
+	argType->u.basic = 0;
+	singleArg->type = argType;
+	newFunc2->parameters = NULL;
+	putVar(newFuncVar2);
 }
 
 void clearFieldTable() {

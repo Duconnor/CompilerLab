@@ -15,7 +15,7 @@ static int WIDTH = 4; /* Should be modified to proper value */
 static int OFFSET = 0;
 
 static void debug(char *str) {
-    printf("%s\n", str);
+    printf("%s", str);
 }
 
 InterCode codesHead = NULL;
@@ -83,8 +83,8 @@ void printInterCode(InterCode ic, FILE* fp) {
         case LABEL:
             sprintf(line, "LABEL label%d :\n", ic->u.sinop.op->u.varNum);
             break;
-        case FUNCTION:
-            sprintf(line, "FUNCTION %s :\n", ic->u.sinop.op->u.name);
+        case FUNCTION_IC:
+            sprintf(line, "FUNCTION_IC %s :\n", ic->u.sinop.op->u.name);
             break;
         case ASSIGN:
             sprintf(line, "%s := %s\n", printOperand(ic->u.assign.left), printOperand(ic->u.assign.right));
@@ -193,6 +193,17 @@ static InterCode genSinop(int kind, int val) {
 	Operand op = (Operand)malloc(sizeof(struct Operand_));
 	op->kind = kind;
 	op->u.value = val;
+	newCode->u.sinop.op = op;
+	newCode->prev = NULL;
+	newCode->next = NULL;
+	return newCode;
+}
+
+static InterCode genFunDec(int kind, char *name) {
+	InterCode newCode = (InterCode)malloc(sizeof(struct InterCode_));
+	Operand op = (Operand)malloc(sizeof(struct Operand_));
+	op->kind = kind;
+	op->u.name = name;
 	newCode->u.sinop.op = op;
 	newCode->prev = NULL;
 	newCode->next = NULL;
@@ -331,6 +342,20 @@ static int getArraySize(Node *exp) {
 	return atoi(node->lexeme.value);
 }
 
+static int findWidth(char *arrayName);
+static int findOffset(char *structureName, char *memberName);
+
+static int findWidth(char *arrayName) {
+	 /* We search the var list to find it's type */
+	FieldList var = getVar(arrayName, 0);
+	Type elem = var->type->u.array.elem;
+	if (elem->kind == BASIC) {
+		return 4;
+	}
+	/* The element type is a structure */
+	return findOffset(elem->u.structure->name, NULL);
+}
+
 static int findOffset(char *structureName, char *memberName) {
 	/* If memberName = NULL, return the whole size of this structure */
 	if (structureName == NULL) {
@@ -362,18 +387,255 @@ static int findOffset(char *structureName, char *memberName) {
 	return offset;
 }
 
-static int findWidth(char *arrayName) {
-	 /* We search the var list to find it's type */
-	FieldList var = getVar(arrayName, 0);
-	Type elem = var->type->u.array.elem;
-	if (elem->kind == BASIC) {
-		return 4;
-	}
-	/* The element type is a structure */
-	return findOffset(elem->u.structure->name, NULL);
+
+
+/* High-level Definitions */
+void translate_Program(Node *program) {
+	debug("translate_Program\n");
+	translate_ExtDefList(program->child);
 }
 
+void translate_ExtDefList(Node *extDefList) {
+	debug("translate_ExtDefList\n");
+	translate_ExtDef(extDefList->child);
+	translate_ExtDefList(extDefList->child->sibling);
+}
+
+void translate_ExtDef(Node *extDef) {
+	debug("translate_ExtDef\n");
+	/* Since there is no global vars, we only need to translate function definitions */
+	char *type = extDef->child->sibling->lexeme.type;
+	if (strcmp(type, "FunDec") == 0) {
+		/* Also, in function definition, we don't need to care about the translation of Specifier */
+		translate_FunDec(extDef->child->sibling);
+		translate_CompSt(extDef->child->sibling->sibling);
+	}
+}
+
+/* Declarators */
+void translate_FunDec(Node *funDec) {
+	debug("translate_FunDec\n");
+	/* There are only two possible cases 
+	 * 1. FunDec -> ID LP VarList RP 
+	 * 2. FunDec -> ID LP RP 
+	 * */
+	/* Translate ID first, then we translate VarList */
+	InterCode newCode = genFunDec(FUNC, funDec->child->lexeme.value);
+	newCode->kind = FUNCTION_IC;
+	putCode(newCode);
+	/* Now translate VarList */
+	if (strcmp(funDec->child->sibling->sibling->lexeme.type, "VarList") == 0) {
+		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
+		FieldList params = func->type->u.function->parameters;
+		while (params != NULL) {
+			int varNum = genNext(&curVarNum);
+			params->num = varNum;
+			InterCode paramDec = genSinop(VARIABLE, varNum);
+			paramDec->kind = PARAM;
+			putCode(paramDec);
+			params = params->tail;
+		}
+	}
+}
+
+/* Statements */
+void translate_CompSt(Node *compst) {
+	debug("translate_CompSt\n");
+	Node *node = compst->child;
+	translate_DefList(node->sibling);
+	translate_StmtList(node->sibling->sibling);	
+}
+
+void translate_StmtList(Node *stmtlist) {
+	debug("translate_StmtList\n");
+	Node *node = stmtlist->child;
+	if(node != NULL) {
+		translate_Stmt(node);
+		translate_StmtList(node->sibling);
+	} else {
+		/* Do nothing */
+	}
+}
+
+void translate_Stmt(Node *stmt) {
+	debug("translate_Stmt\n");
+	Node *node = stmt->child;
+	if (strcmp(node->lexeme.type, "Exp") == 0) {
+		/* Case for production: Stmt -> Exp SEMI */
+		translate_Exp(node, NULL);
+	}
+	else if(strcmp(node->lexeme.type, "CompSt") == 0) {
+		/* Case for production: Stmt -> CompSt */
+		translate_CompSt(node);
+	}
+	else if(strcmp(node->lexeme.type, "RETURN") == 0) {
+		/* Case for production: Stmt -> RETURN Exp SEMI */
+		int newTempNum = genNext(&curTempNum);
+		int kind = translate_Exp(node->sibling, &newTempNum);
+		InterCode newCode1 = genSinop(kind, newTempNum);
+		newCode1->kind = RETURN;
+		putCode(newCode1);
+	}
+	else if(strcmp(node->lexeme.type, "IF") == 0) {
+		if(node->sibling->sibling->sibling->sibling->sibling == NULL) {
+			/* Case for production: Stmt -> IF LP Exp RP Stmt */
+			int label1 = genNext(&curLabel);
+			int label2 = genNext(&curLabel);
+			Node *exp = node->sibling->sibling;
+			translate_Cond(exp, label1, label2);
+
+			InterCode newCode1 = genSinop(LB, label1);
+			newCode1->kind = LABEL;
+			putCode(newCode1);
+
+			Node *stmt = exp->sibling->sibling;
+			translate_Stmt(stmt);
+
+			InterCode newCode2 = genSinop(LB, label2);
+			newCode1->kind = LABEL;
+			putCode(newCode2);
+		}
+		else {
+			/* Case for production: Stmt -> IF LP Exp RP Stmt ELSE Stmt */
+			int label1 = genNext(&curLabel);
+			int label2 = genNext(&curLabel);
+			int label3 = genNext(&curLabel);
+			Node *exp = node->sibling->sibling;
+			translate_Cond(exp, label1, label2);
+
+			InterCode newCode1 = genSinop(LB, label1);
+			newCode1->kind = LABEL;
+			putCode(newCode1);
+
+			Node *stmt1 = exp->sibling->sibling;
+			translate_Stmt(stmt1);
+
+			InterCode newCode2 = genSinop(LB, label3);
+			newCode2->kind = GOTO;
+			putCode(newCode2);
+
+			InterCode newCode3 = genSinop(LB, label2);
+			newCode3->kind = LABEL;
+			putCode(newCode3);
+
+			Node *stmt2 = stmt1->sibling->sibling;
+			translate_Stmt(stmt2);
+
+			InterCode newCode4 = genSinop(LB, label3);
+			newCode4->kind = LABEL;
+			putCode(newCode4);
+		}
+	}
+	else {
+		/* Case for production: Stmt -> WHILE LP Exp RP Stmt */
+		int label1 = genNext(&curLabel);
+		int label2 = genNext(&curLabel);
+		int label3 = genNext(&curLabel);
+
+		InterCode newCode1 = genSinop(LB, label1);
+		newCode1->kind = LABEL;
+		putCode(newCode1);
+
+		Node *exp = node->sibling->sibling;
+		translate_Cond(exp, label2, label3);
+
+		InterCode newCode2 = genSinop(LB, label2);
+		newCode2->kind = LABEL;
+		putCode(newCode2);
+
+		Node *stmt = exp->sibling->sibling;
+		translate_Stmt(stmt);
+
+		InterCode newCode3 = genSinop(LB, label1);
+		newCode3->kind = GOTO;
+		putCode(newCode3);
+
+		InterCode newCode4 = genSinop(LB, label3);
+		newCode4->kind = LABEL;
+		putCode(newCode4);
+
+	}
+}
+
+/* Local Definitions */
+void translate_DefList(Node *deflist) {
+	debug("translate_DefList\n");
+	Node *node = deflist->child;
+	if(node != NULL) {
+		translate_Def(node);
+		translate_DefList(node);
+	} else {
+		/* Do nothing */
+	}
+}
+
+void translate_Def(Node *def) {
+	debug("translate_Def\n");
+	Node *node = def->child;
+	translate_DecList(node->sibling);
+}
+
+void translate_DecList(Node *declist) {
+	debug("translate_DecList\n");
+	Node *node = declist->child;
+	if(node->sibling == NULL) {
+		translate_Dec(node);
+	}
+	else {
+		translate_Dec(node);
+		translate_DecList(node->sibling->sibling);
+	}
+}
+
+void translate_Dec(Node *dec) {
+	debug("translate_Dec\n");
+	Node *node = dec->child;
+	Node *vardec = node;
+	if(vardec->sibling == NULL) {
+		/* Case for production: Dec -> VarDec */
+		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
+			/* Case for production VarDec -> ID */
+			/* No need to generate any code */
+		} else {
+			/* Case for production VarDec -> VarDec LB INT RB 
+			 * and then
+			 * VarDec -> ID */
+			Node *vardec1 = vardec->child;
+			Node *id = vardec1->child;
+			FieldList var = getVar(id->lexeme.value, 0);
+			if(var->num == -1) 
+				var->num = genNext(&curVarNum);
+			int newVarNum = var->num;
+			/* No Array of Structure */
+			int size = atoi(vardec1->sibling->sibling->lexeme.value) * 4;
+			InterCode newCode = genDec(VARIABLE, newVarNum, size);
+			putCode(newCode);
+		}
+	} else {
+		/* Case for production: Dec -> VarDec ASSIGNOP Exp*/
+		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
+			Node *id = vardec->child;
+			Node *exp = vardec->sibling->sibling;
+			FieldList var = getVar(id->lexeme.value, 0);
+			if(var->num == -1)
+				var->num = genNext(&curVarNum);
+			int num1 = var->num;
+			int num2 = genNext(&curTempNum);
+			int kind2 = translate_Exp(exp, &num2);
+			InterCode newCode = genAssign(VARIABLE, kind2, num1, num2);
+			newCode->kind = ASSIGN;
+			putCode(newCode);
+		} else {
+			/* Can not assign for an array */
+			/* Should not reach here! */
+		}
+	
+	}
+}	
+
+/* Expressions */
 int translate_Exp(Node *exp, int *place) {
+	debug("translate_Exp\n");
 	/* Param 'varNum': the index of this variable */
 	/* Return: the 'kind' (type) of this intercode */
 	/* Current node's type is 'Exp' */
@@ -399,7 +661,7 @@ int translate_Exp(Node *exp, int *place) {
 				var->num = *place;
 			} else {
 				/* This means we have alreay associated one index for this var */
-				genBack(curVarNum); /* Put this var index back */
+				genBack(&curVarNum); /* Put this var index back */
 				*place = var->num;
 			}
 			return VARIABLE;
@@ -409,7 +671,7 @@ int translate_Exp(Node *exp, int *place) {
 				callRead->kind = READ;
 				putCode(callRead);
 			} else {
-				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, atoi(node->lexeme.value));
 				callFunc->kind = CALL;
 				putCode(callFunc);
 			}
@@ -423,13 +685,13 @@ int translate_Exp(Node *exp, int *place) {
 			if (strcmp(node->lexeme.value, "WRITE") == 0) {
 				int tempVar = genNext(&curTempNum);
 				int kind = translate_ArgsWrite(node->sibling->sibling, &tempVar);
-				InterCode callWrite = genSinop(kind, &tempVar);
+				InterCode callWrite = genSinop(kind, tempVar);
 				callWrite->kind = WRITE;
 				putCode(callWrite);
 			} else {
 				translate_Args(node->sibling->sibling);
 				/* In the above function, it will generate a bunch of ARG XX*/
-				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, atoi(node->lexeme.value));
 				callFunc->kind = CALL;
 				putCode(callFunc);
 			}
@@ -579,6 +841,7 @@ int translate_Exp(Node *exp, int *place) {
 }
 
 void translate_Cond(Node *exp, int label_true, int label_false) {
+	debug("translate_Cond\n");
 	Node *node = exp->child;
 	if(strcmp(node->lexeme.type, "Exp") == 0) {
 		Node *exp1 = node;
@@ -638,11 +901,13 @@ void translate_Cond(Node *exp, int label_true, int label_false) {
 }
 
 int translate_ArgsWrite(Node *args, int *place) {
+	debug("translate_ArgsWrite\n");
 	/* Function write(x) takes only one argument */
 	return translate_Exp(args->child, place);
 }
 
 void translate_Args(Node *args) {
+	debug("translate_Args\n");
 	int tempVar = genNext(&curTempNum);
 	int kind = translate_Exp(args->child, &tempVar);
 	/* Deal with case when the argument is a structure */
@@ -668,234 +933,7 @@ void translate_Args(Node *args) {
 	}
 }
 
-void translate_Cond(Node *exp, int label1, int label2) {
-	/* TODO: implement me! */
-}
 
-void translate_Stmt(Node *stmt) {
-	Node *node = stmt->child;
-	if (strcmp(node->lexeme.type, "Exp") == 0) {
-		/* Case for production: Stmt -> Exp SEMI */
-		translate_Exp(node, NULL);
-	}
-	else if(strcmp(node->lexeme.type, "CompSt") == 0) {
-		/* Case for production: Stmt -> CompSt */
-		translate_CompSt(node);
-	}
-	else if(strcmp(node->lexeme.type, "RETURN") == 0) {
-		/* Case for production: Stmt -> RETURN Exp SEMI */
-		int newTempNum = genNext(&curTempNum);
-		int kind = translate_Exp(node->sibling, &newTempNum);
-		InterCode newCode1 = genSinop(kind, newTempNum);
-		newCode1->kind = RETURN;
-		putCode(newCode1);
-	}
-	else if(strcmp(node->lexeme.type, "IF") == 0) {
-		if(node->sibling->sibling->sibling->sibling->sibling == NULL) {
-			/* Case for production: Stmt -> IF LP Exp RP Stmt */
-			int label1 = genNext(&curLabel);
-			int label2 = genNext(&curLabel);
-			Node *exp = node->sibling->sibling;
-			translate_Cond(exp, label1, label2);
 
-			InterCode newCode1 = genSinop(LB, label1);
-			newCode1->kind = LABEL;
-			putCode(newCode1);
 
-			Node *stmt = exp->sibling->sibling;
-			translate_Stmt(stmt);
 
-			InterCode newCode2 = genSinop(LB, label2);
-			newCode1->kind = LABEL;
-			putCode(newCode2);
-		}
-		else {
-			/* Case for production: Stmt -> IF LP Exp RP Stmt ELSE Stmt */
-			int label1 = genNext(&curLabel);
-			int label2 = genNext(&curLabel);
-			int label3 = genNext(&curLabel);
-			Node *exp = node->sibling->sibling;
-			translate_Cond(exp, label1, label2);
-
-			InterCode newCode1 = genSinop(LB, label1);
-			newCode1->kind = LABEL;
-			putCode(newCode1);
-
-			Node *stmt1 = exp->sibling->sibling;
-			translate_Stmt(stmt1);
-
-			InterCode newCode2 = genSinop(LB, label3);
-			newCode2->kind = GOTO;
-			putCode(newCode2);
-
-			InterCode newCode3 = genSinop(LB, label2);
-			newCode3->kind = LABEL;
-			putCode(newCode3);
-
-			Node *stmt2 = stmt1->sibling->sibling;
-			translate_Stmt(stmt2);
-
-			InterCode newCode4 = genSinop(LB, label3);
-			newCode4->kind = LABEL;
-			putCode(newCode4);
-		}
-	}
-	else {
-		/* Case for production: Stmt -> WHILE LP Exp RP Stmt */
-		int label1 = genNext(&curLabel);
-		int label2 = genNext(&curLabel);
-		int label3 = genNext(&curLabel);
-
-		InterCode newCode1 = genSinop(LB, label1);
-		newCode1->kind = LABEL;
-		putCode(newCode1);
-
-		Node *exp = node->sibling->sibling;
-		translate_Cond(exp, label2, label3);
-
-		InterCode newCode2 = genSinop(LB, label2);
-		newCode2->kind = LABEL;
-		putCode(newCode2);
-
-		Node *stmt = exp->sibling->sibling;
-		translate_Stmt(stmt);
-
-		InterCode newCode3 = genSinop(LB, label1);
-		newCode3->kind = GOTO;
-		putCode(newCode3);
-
-		InterCode newCode4 = genSinop(LB, label3);
-		newCode4->kind = LABEL;
-		putCode(newCode4);
-
-	}
-}
-
-void translate_CompSt(Node *compst) {
-	Node *node = compst->child;
-	translate_DefList(node->sibling);
-	translate_StmtList(node->sibling->sibling);	
-}
-
-void translate_StmtList(Node *stmtlist) {
-	Node *node = stmtlist->child;
-	if(node != NULL) {
-		translate_Stmt(node);
-		translate_StmtList(node->sibling);
-	} else {
-		/* Do nothing */
-	}
-}
-
-void translate_DefList(Node *deflist) {
-	Node *node = deflist->child;
-	if(node != NULL) {
-		translate_Def(node);
-		translate_DefList(node);
-	} else {
-		/* Do nothing */
-	}
-}
-
-void translate_Def(Node *def) {
-	Node *node = def->child;
-	translate_DecList(node->sibling);
-}
-
-void translate_DecList(Node *declist) {
-	Node *node = declist->child;
-	if(node->sibling == NULL) {
-		translate_Dec(node);
-	}
-	else {
-		translate_Dec(node);
-		translate_DecList(node->sibling->sibling);
-	}
-}
-
-void translate_Dec(Node *dec) {
-	Node *node = dec->child;
-	Node *vardec = node;
-	if(vardec->sibling == NULL) {
-		/* Case for production: Dec -> VarDec */
-		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
-			/* Case for production VarDec -> ID */
-			/* No need to generate any code */
-		} else {
-			/* Case for production VarDec -> VarDec LB INT RB 
-			 * and then
-			 * VarDec -> ID */
-			Node *vardec1 = vardec->child;
-			Node *id = vardec1->child;
-			FieldList var = getVar(id->lexeme.value, 0);
-			if(var->num == -1) 
-				var->num = genNext(&curVarNum);
-			int newVarNum = var->num;
-			/* No Array of Structure */
-			int size = atoi(vardec1->sibling->sibling->lexeme.value) * 4;
-			InterCode newCode = genDec(VARIABLE, newVarNum, size);
-			putCode(newCode);
-		}
-	} else {
-		/* Case for production: Dec -> VarDec ASSIGNOP Exp*/
-		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
-			Node *id = vardec->child;
-			Node *exp = vardec->sibling->sibling;
-			FieldList var = getVar(id->lexeme.value, 0);
-			if(var->num == -1)
-				var->num = genNext(&curVarNum);
-			int num1 = var->num;
-			int num2 = genNext(&curTempNum);
-			int kind2 = translate_Exp(exp, &num2);
-			InterCode newCode = genAssign(VARIABLE, kind2, num1, num2);
-			newCode->kind = ASSIGN;
-			putCode(newCode);
-		} else {
-			/* Can not assign for an array */
-			/* Should not reach here! */
-		}
-	
-	}
-}	
-void translate_Program(Node *program) {
-	translate_ExtDefList(program->child);
-}
-
-void translate_ExtDefList(Node *extDefList) {
-	translate_ExtDef(extDefList->child);
-	translate_ExtDefList(extDefList->child->sibling);
-}
-
-void translate_ExtDef(Node *extDef) {
-	/* Since there is no global vars, we only need to translate function definitions */
-	char *type = extDef->child->sibling->lexeme.type;
-	if (strcmp(type, "FunDec") == 0) {
-		/* Also, in function definition, we don't need to care about the translation of Specifier */
-		translate_FunDec(extDef->child->sibling);
-		translate_CompSt(extDef->child->sibling->sibling);
-	}
-}
-
-void translate_FunDec(Node *funDec) {
-	/* There are only two possible cases 
-	 * 1. FunDec -> ID LP VarList RP 
-	 * 2. FunDec -> ID LP RP 
-	 * */
-	/* Translate ID first, then we translate VarList */
-	InterCode newCode = genSinop(FUNC, funDec->child->lexeme.value);
-	newCode->kind = FUNCTION;
-	putCode(newCode);
-	/* Now translate VarList */
-	if (strcmp(funDec->child->sibling->sibling, "VarList") == 0) {
-		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
-		FieldList params = func->type->u.function->parameters;
-		while (params != NULL) {
-			int varNum = genNext(&curVarNum);
-			params->num = varNum;
-			InterCode paramDec = genSinop(VARIABLE, varNum);
-			paramDec->kind = PARAM;
-			putCode(paramDec);
-			params = params->tail;
-		}
-	}
-}
