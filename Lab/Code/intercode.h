@@ -7,7 +7,7 @@ typedef struct Operand_* Operand;
 typedef struct InterCode_* InterCode;
 
 struct Operand_ {
-	enum { TEMPVAR, VARIABLE, CONSTANT, LB, FUNC } kind;
+	enum { TEMPVAR, VARIABLE, CONSTANT, LB, FUNC, ADDRESS } kind;
 	union {
 		int varNum;
 		int value;

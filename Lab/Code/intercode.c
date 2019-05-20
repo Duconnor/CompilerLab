@@ -832,7 +832,8 @@ int translate_Exp(Node *exp, int *place) {
 			int tempStartAddr = genNext(&curTempNum);
 			int kindStartAddr = translate_Exp(node, &tempStartAddr);
 			/* Second, get the offset of the member */
-			OFFSET = findOffset(node->child->lexeme.value, node->sibling->sibling->lexeme.value);
+			FieldList var = getVar(node->child->lexeme.value, 0);
+			OFFSET = findOffset(var->type->u.structure->name, node->sibling->sibling->lexeme.value);
 			/* Third, get the address of the memeber */
 			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
