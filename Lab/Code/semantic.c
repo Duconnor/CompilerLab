@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 static void debug(char *str) {
-	printf("%s", str);
+	//printf("%s", str);
 }
 
 extern int putVar(FieldList var);

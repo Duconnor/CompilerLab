@@ -606,7 +606,20 @@ void translate_Dec(Node *dec) {
 		/* Case for production: Dec -> VarDec */
 		if(strcmp(vardec->child->lexeme.type, "ID") == 0) {
 			/* Case for production VarDec -> ID */
-			/* No need to generate any code */
+			Node *id = vardec->child;
+			FieldList var = getVar(id->lexeme.value, 0);
+			if(var->type->kind == STRUCTURE) {
+				/* When it's a struct variable, we need to generate [DEC var size] */
+				if(var->num == -1)
+					var->num = genNext(&curVarNum);
+				int newVarNum = var->num;
+				int size = findOffset(var->type->u.structure->name, NULL);
+				InterCode newCode = genDec(VARIABLE, newVarNum, size);
+				newCode->kind = DEC;
+				putCode(newCode);
+			} else {
+				/* No need to generate any code */
+			}
 		} else {
 			/* Case for production VarDec -> VarDec LB INT RB 
 			 * and then
@@ -620,6 +633,7 @@ void translate_Dec(Node *dec) {
 			/* No Array of Structure */
 			int size = atoi(vardec1->sibling->sibling->lexeme.value) * 4;
 			InterCode newCode = genDec(VARIABLE, newVarNum, size);
+			newCode->kind = DEC;
 			putCode(newCode);
 		}
 	} else {
