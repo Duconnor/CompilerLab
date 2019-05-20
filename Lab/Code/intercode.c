@@ -291,7 +291,7 @@ static InterCode genDec(int kind, int var, int size) {
 	return newCode;
 }
 
-static InterCode genCall(int op1Kind, int op2Kind, int op1Var, int op2Var) {
+static InterCode genCall(int op1Kind, int op2Kind, int op1Var, char *op2Var) {
 	InterCode newCode = (InterCode)malloc(sizeof(struct InterCode_));
 	Operand op1 = (Operand)malloc(sizeof(struct Operand_));
 	Operand op2 = (Operand)malloc(sizeof(struct Operand_));
@@ -305,7 +305,7 @@ static InterCode genCall(int op1Kind, int op2Kind, int op1Var, int op2Var) {
 	op2->kind = op2Kind;
 
 	op1->u.value = op1Var;
-	op2->u.value = op2Var;
+	op2->u.name = op2Var;
 
 	return newCode;
 }
@@ -682,7 +682,7 @@ int translate_Exp(Node *exp, int *place) {
 				callRead->kind = READ;
 				putCode(callRead);
 			} else {
-				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, atoi(node->lexeme.value));
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
 				callFunc->kind = CALL;
 				putCode(callFunc);
 			}
@@ -702,7 +702,7 @@ int translate_Exp(Node *exp, int *place) {
 			} else {
 				translate_Args(node->sibling->sibling);
 				/* In the above function, it will generate a bunch of ARG XX*/
-				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, atoi(node->lexeme.value));
+				InterCode callFunc = genCall(TEMPVAR, FUNC, *place, node->lexeme.value);
 				callFunc->kind = CALL;
 				putCode(callFunc);
 			}
@@ -848,6 +848,8 @@ int translate_Exp(Node *exp, int *place) {
 		if(place == NULL)
 			return -1;
 		return cond_Exp(exp, place);
+	} else if (strcmp(node->lexeme.type, "LP") == 0) {
+		return translate_Exp(node->sibling, place);
 	}
 }
 

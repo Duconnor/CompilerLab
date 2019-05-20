@@ -112,9 +112,8 @@ void ExtDef(Node *root) {
         FieldList funcVar = FunDec(type, root);
         Function func = funcVar->type->u.function;
         if(strcmp(root->sibling->lexeme.type, "CompSt") == 0) {
-			//if (funcVar->type == NULL)
+			if (funcVar->type == NULL)
 				debug("ExtDef NULL\n");
-			CompSt(funcVar->type, root->sibling);
             /* Case for ExtDef -> Specifier FunDec CompSt */
             func->isDefined = 1;
             /* Check if there is a function with the same name*/
@@ -137,6 +136,7 @@ void ExtDef(Node *root) {
 						printf("Error type 19 at Line %d: Inconsistent declaration of function \"%s\"\n", root->lexeme.linenum, funcVar->name);
                 }
             }
+			CompSt(funcVar->type, root->sibling);
         }
         else {
             /* Case for ExtDef -> Specifier FunDec SEMI */
@@ -645,7 +645,7 @@ Type Exp(Node *root, int *flag) {
 	else if(strcmp(root->child->lexeme.type, "LP") == 0) {
 		/* Case for production: Exp -> LP Exp RP */
 		*flag = 1;
-		return Exp(root->child->child, flag);
+		return Exp(root->child->sibling, flag);
 	}
 	else if(strcmp(root->child->lexeme.type, "MINUS") == 0) {
 		/* Case for production: Exp -> MINUS Exp */
