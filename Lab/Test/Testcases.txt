@@ -4,4 +4,5 @@ test2.cmm   PASS
 test3.cmm   PASS
 
 /* 自行构造的样例 */
-test4.cmm （测试数组的使用）    
+test4.cmm   （测试数组的使用）  PASS
+test5.cmm   （测试更复杂的数组）    PASS  
