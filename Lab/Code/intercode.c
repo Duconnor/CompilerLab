@@ -401,6 +401,10 @@ void translate_Program(Node *program) {
 
 void translate_ExtDefList(Node *extDefList) {
 	debug("translate_ExtDefList\n");
+	if(extDefList == NULL) {
+		printf("NULL HERE!\n");
+		exit(-1);
+	}
 	Node *node = extDefList->child;
 	if(node != NULL) {
 		translate_ExtDef(node);
@@ -816,6 +820,7 @@ int translate_Exp(Node *exp, int *place) {
 			}
 			/* First, find the start address */
 			int tempFirstElem = genNext(&curTempNum);
+			//printf("Here!\n");
 			int kindFirstElem = translate_Exp(node, &tempFirstElem);
 			/* If Exp1 -> Exp2 DOT ID 
 			 * Then we will get the first element in the array stored at t_{tempStartAddr}
@@ -826,15 +831,18 @@ int translate_Exp(Node *exp, int *place) {
 			 * */
 
 			int bracketNum = getArraySize(node->sibling->sibling);
+			//printf("bracketNum: %d\n", bracketNum);
 			/* bracketNum is the index */
 			/* Determine the WIDTH here! */
 			WIDTH = findWidth(node->child->lexeme.value);
+			//printf("WIDTH: %d\n", WIDTH);
 			/* Finally, combine them to get the address of the value we need 
 			 * In the intercode: t = &v_{start} + index * WIDTH */
 			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = NULL;
 			if (bracketNum != -1) {
 				if (getAddr) {
+					//printf("Here!\n");
 					genBack(&curTempNum);
 					newCode1 = genBinop(kindFirstElem, CONSTANT, TEMPVAR, tempFirstElem, bracketNum * WIDTH, *place);
 				} else {
@@ -862,7 +870,7 @@ int translate_Exp(Node *exp, int *place) {
 			if (!getAddr) {
 				/* Associate place with the result */
 				InterCode newCode2 = genAssign(TEMPVAR, TEMPVAR, *place, tempAddr);
-				newCode2->kind = AORS;
+				newCode2->kind = ASSIGNP; 
 				putCode(newCode2);
 			}
 			/* Return type is AORS */

@@ -1,18 +1,8 @@
-struct Operands {
-	int o1;
-	int o2;	
-};
-
-int add(struct Operands temp) {
-	return (temp.o1 + temp.o2);
-}
-
-int main(){
-	int n;
-	struct Operands op;
-	op.o1 = 5;
-	op.o2 = 2;
-	n = add(op);
-	write(n);
-	return 0;
+int main() 
+{
+    int a[10];
+    int j;
+    a[7] = -7;
+    j = a[7];
+    return 0;
 }

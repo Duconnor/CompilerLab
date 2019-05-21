@@ -1,0 +1,7 @@
+/* 讲义中的样例 */
+test1.cmm   PASS 
+test2.cmm   PASS
+test3.cmm   PASS
+
+/* 自行构造的样例 */
+test4.cmm （测试数组的使用）    
