@@ -4,4 +4,12 @@ test2.cmm   PASS
 test3.cmm   PASS
 
 /* 自行构造的样例 */
-test4.cmm （测试数组的使用）    
+test4.cmm   （测试数组的使用）  PASS
+test5.cmm   （测试更复杂的数组）    PASS  
+test6.cmm   （结构体和数组同时出现）    PASS
+
+A-1.cmm PASS
+A-2.cmm PASS
+A-3.cmm PASS
+A-4.cmm PASS
+A-5.cmm PASS

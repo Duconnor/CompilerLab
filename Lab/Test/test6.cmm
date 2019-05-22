@@ -1,0 +1,29 @@
+struct A{
+    int a;
+    int b;
+    int c;
+};
+
+int main() 
+{
+    struct A aa;
+    int arr[3];
+    int i = 0;
+    arr[0] = read();
+    arr[1] = read();
+    arr[2] = read();
+    while(i < 3)
+    {
+        if(i == 0)
+            aa.a = arr[i];
+        else if(i == 1)
+            aa.b = arr[i];
+        else
+            aa.c = arr[i];
+        i = i + 1;
+    }
+    write(aa.a);
+    write(aa.b);
+    write(aa.c);
+    return 0;
+}
