@@ -1,5 +1,5 @@
 int Josepy(int n,int m){
-	int people[100], i = 1; 
+	int people[100], i = 0;
 	int j=0,k=0,num=0; 
 	while(i <= n){
 		people[i] = 1;

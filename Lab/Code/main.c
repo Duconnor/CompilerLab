@@ -9,7 +9,7 @@ extern FILE *yyin;
 extern int yylineno;
 extern void yyrestart(FILE*);
 extern void yyparse(void);
-extern int aErrorFree, bErrorFree;
+extern int aErrorFree, bErrorFree, sErrorFree;
 
 Node* tree;
 
@@ -30,12 +30,15 @@ int main(int argc, char **argv) {
 		initTable();
 		
 		if(aErrorFree && bErrorFree) {
-			printTree(tree);
-			printf("\n");
+			//printTree(tree);
+			//printf("\n");
 			Program(tree);
+		}
+		if(sErrorFree) {
 			translate_Program(tree);
 			printInterCodes(argv[2]);
 		}
+
 
 		destroyTree(tree);
 

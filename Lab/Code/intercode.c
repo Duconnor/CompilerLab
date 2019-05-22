@@ -5,6 +5,7 @@
 #include "intercode.h"
 #include "table.h"
 
+extern int sErrorFree;
 extern FieldList varTable[TABLE_SIZE];
 
 static int curTempNum = 0; /* Initialize to 0 */
@@ -17,7 +18,7 @@ static int OFFSET = 0;
 static int getAddr = 0;
 
 static void debug(char *str) {
-    printf("%s", str);
+    //printf("%s", str);
 }
 
 InterCode codesHead = NULL;

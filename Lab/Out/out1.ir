@@ -5,22 +5,22 @@ t3 := #0
 IF v1 > t3 GOTO label1
 GOTO label2
 LABEL label1 :
-t3 := #1
-WRITE t3
+t4 := #1
+WRITE t4
 GOTO label3
 LABEL label2 :
-t5 := #0
-IF v1 < t5 GOTO label4
+t6 := #0
+IF v1 < t6 GOTO label4
 GOTO label5
 LABEL label4 :
-t6 := #1
-t5 := #0 - t6
-WRITE t5
+t8 := #1
+t7 := #0 - t8
+WRITE t7
 GOTO label6
 LABEL label5 :
-t7 := #0
-WRITE t7
+t10 := #0
+WRITE t10
 LABEL label6 :
 LABEL label3 :
-t8 := #0
-RETURN t8
+t11 := #0
+RETURN t11
