@@ -634,6 +634,10 @@ void translate_Dec(Node *dec) {
 			 * VarDec -> ID */
 			Node *vardec1 = vardec->child;
 			Node *id = vardec1->child;
+			if (strcmp(id->lexeme.type, "ID") != 0) {
+				printf("Cannot translate: Code contains variables or parameters of structure type.\n");
+				exit(-1);
+			}
 			FieldList var = getVar(id->lexeme.value, 0);
 			if(var->num == -1) 
 				var->num = genNext(&curVarNum);

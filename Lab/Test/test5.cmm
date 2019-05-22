@@ -1,0 +1,15 @@
+int dic(int a) {
+	if (a >= 0)
+		write(3);
+	else
+		write(2);
+	return 0;
+}
+int main() {
+	int a = 0;
+	int x = 1;
+	a = read();
+	x = dic(a);
+	write(x);
+	return 0;
+}
