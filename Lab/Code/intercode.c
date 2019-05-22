@@ -703,6 +703,10 @@ int translate_Exp(Node *exp, int *place) {
 			}
 			return VARIABLE;
 		} else if (strcmp(node->sibling->sibling->lexeme.type, "Args") != 0) {
+			if (place == NULL) {
+				int tempVar = genNext(&curTempNum);
+				place = &tempVar;
+			}
 			if (strcmp(node->lexeme.value, "read") == 0) {
 				InterCode callRead = genSinop(TEMPVAR, *place);
 				callRead->kind = READ;
@@ -714,6 +718,10 @@ int translate_Exp(Node *exp, int *place) {
 			}
 			return TEMPVAR;
 		} else {
+			if (place == NULL) {
+				int tempVar = genNext(&curTempNum);
+				place = &tempVar;
+			}
 			/* A little modification 
 			 * We generate the 'ARG XX' at the same time we translate Args 
 			 * But we use two different functions
@@ -1012,15 +1020,11 @@ void translate_Args(Node *args) {
 			}
 		}
 	}
-	InterCode param = genSinop(kind, tempVar);
-	param->kind = ARGV;
-	putCode(param);
 	if (args->child->sibling != NULL) {
 		translate_Args(args->child->sibling->sibling);
 	}
+	InterCode param = genSinop(kind, tempVar);
+	param->kind = ARGV;
+	putCode(param);
+
 }
-
-
-
-
-
