@@ -3,6 +3,6 @@ int main()
     int a[10];
     int j = 7;
     a[7] = -7;
-    write(a[7]);
+    write(a[j]);
     return 0;
 }
