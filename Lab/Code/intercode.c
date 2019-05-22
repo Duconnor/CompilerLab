@@ -442,6 +442,10 @@ void translate_FunDec(Node *funDec) {
 		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
 		FieldList params = func->type->u.function->parameters;
 		while (params != NULL) {
+			if (params->type->kind != BASIC && params->type->kind != STRUCTURE) {
+				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
+				exit(-1);
+			}
 			int varNum = genNext(&curVarNum);
 			params->num = varNum;
 			InterCode paramDec = genSinop(VARIABLE, varNum);
@@ -636,7 +640,7 @@ void translate_Dec(Node *dec) {
 			Node *vardec1 = vardec->child;
 			Node *id = vardec1->child;
 			if (strcmp(id->lexeme.type, "ID") != 0) {
-				printf("Cannot translate: Code contains variables or parameters of structure type.\n");
+				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
 				exit(-1);
 			}
 			FieldList var = getVar(id->lexeme.value, 0);
