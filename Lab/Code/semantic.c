@@ -248,8 +248,10 @@ FieldList VarDec(Type type, Node *root) {
 
 		/* Get ID and insert into symbol table */
 		FieldList newVar = (FieldList)malloc(sizeof(struct FieldList_));
+		Type newType = (Type)malloc(sizeof(struct Type_));
+		memcpy(newType, type, sizeof(struct Type_));
 		newVar->name = root->child->lexeme.value;
-		newVar->type = type;
+		newVar->type = newType;
 		newVar->num = -1;
 		newVar->isAddress = 0;
 
@@ -546,6 +548,8 @@ FieldList Dec(Type type, Node *root, int isStructure) {
 			if (expType == NULL)
 				return NULL;
 			if (!isEquivalent(type, expType)) {
+				printf("Type:%d", type->kind);
+				printf("type A:%d, type B:%d\n", type->u.basic, expType->u.basic);
 				printf("Error type 5 at Line %d: Type mismatched for assignment.\n", root->child->sibling->lexeme.linenum);
 				return NULL;
 			}
