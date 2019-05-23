@@ -105,7 +105,7 @@ WRITE v12
 v10 := v9
 LABEL label6 :
 t143 := #1200 + #22
-IF v9 >= #1200 GOTO label7
+IF v9 >= t143 GOTO label7
 GOTO label8
 LABEL label7 :
 v10 := v9 + #1024
