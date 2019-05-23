@@ -1058,9 +1058,11 @@ void constantFold() {
 					delCode(tmp);
 				} else
 					break;
-			}
+			} else
+				p = p->next;
 		}
-		p = p->next;
+		else
+			p = p->next;
 	}while(p != codesHead);
 	p = codesHead;
 	do{
@@ -1120,4 +1122,8 @@ void constantReplace(InterCode code, int *map, int size) {
 			code->u.triop.op2->u.value = map[numOp2];
 		}
 	}
+}
+
+void slidingWindow() {
+
 }
