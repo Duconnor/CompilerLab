@@ -766,17 +766,22 @@ int translate_Exp(Node *exp, int *place) {
 			 * I will pass it to translate_Exp anyway
 			 * In order to match this ID with a corresponding num */
 			int numLeft = genNext(&curTempNum);
+			getAddr = 1;
 			int kindLeft = translate_Exp(node, &numLeft);
+			getAddr = 0;
+			/*
 			if (kindLeft == AORS) {
+			*/
 				/* If an array element or struture element appears on the left of a ASSIGN operation 
 				 * It means we want to change the value in that array or structure, not the value of that temp var
 				 * So, we need to get its address first */
-				int tempAddr = genNext(&curTempNum);
+			/*	int tempAddr = genNext(&curTempNum);
 				getAddr = 1;
 				translate_Exp(node, &tempAddr);
 				getAddr = 0;
 				numLeft = tempAddr;
 			}
+			*/
 			int numRight = genNext(&curTempNum);
 			int kindRight = translate_Exp(node->sibling->sibling, &numRight);
 			InterCode newCode = genAssign(kindLeft, kindRight, numLeft, numRight);
@@ -1048,8 +1053,9 @@ void constantFold() {
 				int cValue = p->u.assign.right->u.value;
 				if(tNum < SIZE) {
 					map[tNum] = cValue;
+					InterCode tmp = p;
 					p = p->next;
-					delCode(p);
+					delCode(tmp);
 				} else
 					break;
 			}
@@ -1058,10 +1064,60 @@ void constantFold() {
 	}while(p != codesHead);
 	p = codesHead;
 	do{
-		constantReplcae(p, map, SIZE);
+		constantReplace(p, map, SIZE);
 		p = p->next;
 	}while(p != codesHead);
+	/*
 	for(int i = 0; i < SIZE; i++) 
 		if(map[i] != -1)
 			printf("map[t%d] = %d\n", i, map[i]);
+	*/
+}
+
+void constantReplace(InterCode code, int *map, int size) {
+	if (code->kind == ASSIGN || code->kind == ASSIGNP || code->kind == PASSIGN) {
+		/* Case that use assign */
+		int numRight = code->u.assign.right->u.varNum;
+		int typeRight = code->u.assign.right->kind;
+		if (typeRight == TEMPVAR && numRight < size && map[numRight] != -1) {
+			code->u.assign.right->kind = CONSTANT;
+			code->u.assign.right->u.value = map[numRight];
+		}
+	} else if (code->kind == RETURN || code->kind == WRITE) {
+		/* Case for sinop */
+		int numOp = code->u.sinop.op->u.varNum;
+		int typeOp = code->u.sinop.op->kind;
+		if (typeOp == TEMPVAR && numOp < size && map[numOp] != -1) {
+			code->u.sinop.op->kind = CONSTANT;
+			code->u.sinop.op->u.value = map[numOp];
+		}
+	} else if (code->kind == ADD || code->kind == SUB || code->kind == MUL
+			|| code->kind == DIV || code->kind == ADDR) {
+		/* Case for binop */
+		int numOp1 = code->u.binop.op1->u.varNum;
+		int typeOp1 = code->u.binop.op1->kind;
+		if (typeOp1 == TEMPVAR && numOp1 < size && map[numOp1] != -1) {
+			code->u.binop.op1->kind = CONSTANT;
+			code->u.binop.op1->u.value = map[numOp1];
+		}
+		int numOp2 = code->u.binop.op2->u.varNum;
+		int typeOp2 = code->u.binop.op2->kind;
+		if (typeOp2 == TEMPVAR && numOp2 < size && map[numOp2] != -1) {
+			code->u.binop.op2->kind = CONSTANT;
+			code->u.binop.op2->u.value = map[numOp2];
+		}
+	} else if (code->kind == IFGOTO) {
+		int numOp1 = code->u.triop.op1->u.varNum;
+		int typeOp1 = code->u.triop.op1->kind;
+		if (typeOp1 == TEMPVAR && numOp1 < size && map[numOp1] != -1) {
+			code->u.triop.op1->kind = CONSTANT;
+			code->u.triop.op1->u.value = map[numOp1];
+		}
+		int numOp2 = code->u.triop.op2->u.varNum;
+		int typeOp2 = code->u.triop.op2->kind;
+		if (typeOp2 == TEMPVAR && numOp2 < size && map[numOp2] != -1) {
+			code->u.triop.op2->kind = CONSTANT;
+			code->u.triop.op2->u.value = map[numOp2];
+		}
+	}
 }
