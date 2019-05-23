@@ -398,6 +398,7 @@ static int findOffset(char *structureName, char *memberName) {
 void translate_Program(Node *program) {
 	debug("translate_Program\n");
 	translate_ExtDefList(program->child);
+	constantFold();
 }
 
 void translate_ExtDefList(Node *extDefList) {
@@ -1032,4 +1033,35 @@ void translate_Args(Node *args) {
 	param->kind = ARGV;
 	putCode(param);
 
+}
+
+void constantFold() {
+	static int SIZE = 1024;
+	int map[SIZE];
+	for(int i = 0; i < SIZE; i++)
+		map[i] = -1;
+	InterCode p = codesHead;
+	do{
+		if(p->kind == ASSIGN) {
+			if(p->u.assign.right->kind == CONSTANT){
+				int tNum = p->u.assign.left->u.varNum;
+				int cValue = p->u.assign.right->u.value;
+				if(tNum < SIZE) {
+					map[tNum] = cValue;
+					p = p->next;
+					delCode(p);
+				} else
+					break;
+			}
+		}
+		p = p->next;
+	}while(p != codesHead);
+	p = codesHead;
+	do{
+		constantReplcae(p, map, SIZE);
+		p = p->next;
+	}while(p != codesHead);
+	for(int i = 0; i < SIZE; i++) 
+		if(map[i] != -1)
+			printf("map[t%d] = %d\n", i, map[i]);
 }

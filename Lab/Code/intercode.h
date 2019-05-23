@@ -69,4 +69,7 @@ void translate_Args(Node *args);
 void translate_Cond(Node *exp, int label_true, int label_false);
 int translate_ArgsWrite(Node *args, int *place);
 
+
+void constantFold();
+void constantReplace();
 #endif
