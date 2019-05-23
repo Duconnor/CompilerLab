@@ -72,4 +72,5 @@ int translate_ArgsWrite(Node *args, int *place);
 
 void constantFold();
 void constantReplace();
+void slidingWindow();
 #endif

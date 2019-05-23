@@ -399,6 +399,7 @@ void translate_Program(Node *program) {
 	debug("translate_Program\n");
 	translate_ExtDefList(program->child);
 	constantFold();
+	slidingWindow();
 }
 
 void translate_ExtDefList(Node *extDefList) {
@@ -1125,5 +1126,36 @@ void constantReplace(InterCode code, int *map, int size) {
 }
 
 void slidingWindow() {
-
+	InterCode p = codesHead;
+	do{
+		InterCode q = p->next;
+		if(q == codesHead)
+			break;
+		if(q->kind == ASSIGN) {
+			if(p->kind == ADD || p->kind == SUB || p->kind == MUL || p->kind == DIV || p->kind == ADDR) {
+				if(p->u.binop.result->kind == TEMPVAR && q->u.assign.right->kind == TEMPVAR)
+					if(p->u.binop.result->u.varNum == q->u.assign.right->u.varNum) {
+						p->u.binop.result = q->u.assign.left;
+						p = q->next;
+						delCode(q);
+					} else
+						p = p->next;
+				else
+					p = p->next;
+			} else if(p->kind == ASSIGN) {
+				if(p->u.assign.left->kind == TEMPVAR && q->u.assign.right->kind == TEMPVAR)
+					if(p->u.assign.left->u.varNum == q->u.assign.right->u.varNum) {
+						p->u.assign.left = q->u.assign.left;
+						p = q->next;
+						delCode(q);
+					} else 
+						p = p->next;
+				else
+					p = p->next;
+				
+			} else 
+				p = p->next;
+		} else 
+			p=p->next; 
+	} while(p != codesHead);
 }
