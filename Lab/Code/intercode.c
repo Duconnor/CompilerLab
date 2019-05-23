@@ -1078,12 +1078,17 @@ void constantFold() {
 
 void constantReplace(InterCode code, int *map, int size) {
 	if (code->kind == ASSIGN || code->kind == ASSIGNP || code->kind == PASSIGN) {
-		/* Case that use assign */
+		/* Case that use assign */	
 		int numRight = code->u.assign.right->u.varNum;
 		int typeRight = code->u.assign.right->kind;
 		if (typeRight == TEMPVAR && numRight < size && map[numRight] != -1) {
 			code->u.assign.right->kind = CONSTANT;
 			code->u.assign.right->u.value = map[numRight];
+		}
+		int numLeft = code->u.assign.left->u.varNum;
+		int typeLeft = code->u.assign.left->kind;
+		if (typeLeft == TEMPVAR && numLeft < size && map[numLeft] != -1) {
+			map[numLeft] = -1; /* Modified since here, not constant anymore */
 		}
 	} else if (code->kind == RETURN || code->kind == WRITE) {
 		/* Case for sinop */
@@ -1108,7 +1113,13 @@ void constantReplace(InterCode code, int *map, int size) {
 			code->u.binop.op2->kind = CONSTANT;
 			code->u.binop.op2->u.value = map[numOp2];
 		}
+		int numResult = code->u.binop.result->u.varNum;
+		int typeResult = code->u.binop.result->kind;
+		if (typeResult == TEMPVAR && numResult < size && map[numResult] != -1) {
+			map[numResult] = -1; /* Kill it */
+		}
 	} else if (code->kind == IFGOTO) {
+		/* Case for triop */
 		int numOp1 = code->u.triop.op1->u.varNum;
 		int typeOp1 = code->u.triop.op1->kind;
 		if (typeOp1 == TEMPVAR && numOp1 < size && map[numOp1] != -1) {
@@ -1120,6 +1131,13 @@ void constantReplace(InterCode code, int *map, int size) {
 		if (typeOp2 == TEMPVAR && numOp2 < size && map[numOp2] != -1) {
 			code->u.triop.op2->kind = CONSTANT;
 			code->u.triop.op2->u.value = map[numOp2];
+		}
+	} else if (code->kind == CALL) {
+		/* Check if the return var is a constant we think before */
+		int type = code->u.call.op1->kind;
+		int varNum = code->u.call.op1->u.varNum;
+		if (type == TEMPVAR && varNum < size && map[varNum] != -1) {
+			map[varNum] = -1; /* Kill it */
 		}
 	}
 }
