@@ -25,6 +25,7 @@ struct FieldList_ {
 	int isAddress; /* Is this var address or variable */
     Type type;
     FieldList tail;
+    FieldList ptail; //Only for parameters!
 };
 
 struct Structure_ {

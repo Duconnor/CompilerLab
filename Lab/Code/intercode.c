@@ -17,6 +17,8 @@ static int OFFSET = 0;
 
 static int getAddr = 0;
 
+static int OPTIMIZE = 1;
+
 static void debug(char *str) {
     //printf("%s", str);
 }
@@ -398,8 +400,10 @@ static int findOffset(char *structureName, char *memberName) {
 void translate_Program(Node *program) {
 	debug("translate_Program\n");
 	translate_ExtDefList(program->child);
-	constantFold();
-	slidingWindow();
+	if(OPTIMIZE) {
+		constantFold();
+		slidingWindow();
+	}
 }
 
 void translate_ExtDefList(Node *extDefList) {
@@ -436,6 +440,8 @@ void translate_FunDec(Node *funDec) {
 	 * 2. FunDec -> ID LP RP 
 	 * */
 	/* Translate ID first, then we translate VarList */
+	char *funName = funDec->child->lexeme.value;
+	//printf("I_F:%s\n", funName);
 	InterCode newCode = genFunDec(FUNC, funDec->child->lexeme.value);
 	newCode->kind = FUNCTION_IC;
 	putCode(newCode);
@@ -444,8 +450,8 @@ void translate_FunDec(Node *funDec) {
 		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
 		FieldList params = func->type->u.function->parameters;
 		while (params != NULL) {
-			if (params->type->kind == ARRAY) {
-				/*TODO: kind may be FUNCTION here */
+			//printf("%s\n", params->name);
+			if (params->type->kind != BASIC && params->type->kind != STRUCTURE) {
 				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
 				exit(-1);
 			}
@@ -454,7 +460,7 @@ void translate_FunDec(Node *funDec) {
 			InterCode paramDec = genSinop(VARIABLE, varNum);
 			paramDec->kind = PARAM;
 			putCode(paramDec);
-			params = params->tail;
+			params = params->ptail;
 		}
 	}
 }

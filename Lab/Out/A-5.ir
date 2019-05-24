@@ -1,49 +1,35 @@
 FUNCTION fact :
 PARAM v1
-t1 := #1
-v2 := t1
-t2 := #1
-v3 := t2
+v2 := #1
+v3 := #1
 LABEL label1 :
 IF v3 <= v1 GOTO label2
 GOTO label3
 LABEL label2 :
-t3 := v2 * v3
-v2 := t3
-t5 := #1
-t4 := v3 + t5
-v3 := t4
+v2 := v2 * v3
+v3 := v3 + #1
 GOTO label1
 LABEL label3 :
 RETURN v2
 FUNCTION main :
 DEC v4 20
-t6 := #0
-v5 := t6
-t7 := #5
-v6 := t7
+v5 := #0
+v6 := #5
 LABEL label4 :
 IF v5 < v6 GOTO label5
 GOTO label6
 LABEL label5 :
 t10 := v5 * #4
-t9 := &v4 + t10
-t8 := *t9
-t13 := v5 * #4
-t11 := &v4 + t13
-t15 := #2
-t14 := v5 + t15
-*t11 := t14
-t19 := v5 * #4
-t18 := &v4 + t19
-t17 := *t18
-ARG t17
-t16 := CALL fact
-WRITE t16
-t21 := #1
-t20 := v5 + t21
-v5 := t20
+t8 := &v4 + t10
+t11 := v5 + #2
+*t8 := t11
+t17 := v5 * #4
+t16 := &v4 + t17
+t15 := *t16
+ARG t15
+t14 := CALL fact
+WRITE t14
+v5 := v5 + #1
 GOTO label4
 LABEL label6 :
-t22 := #0
-RETURN t22
+RETURN #0

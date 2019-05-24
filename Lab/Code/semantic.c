@@ -53,8 +53,8 @@ static int isEquivalent(Type this, Type that) {
 					isParametersEquivalent = 0;
 					break;
 				}
-				thisList = thisList->tail;
-				thatList = thatList->tail;
+				thisList = thisList->ptail;
+				thatList = thatList->ptail;
 			}
 			if ((thisList == NULL && thatList != NULL) || (thisList != NULL && thatList == NULL)) {
 				isParametersEquivalent = 0;
@@ -322,6 +322,7 @@ FieldList FunDec(Type type, Node *root) {
     newFunc->isDefined = 0;
     newFunc->retVal = type;
 	root = root->child->sibling->sibling;
+	//printf("S_F:%s\n", newVar->name);
 	if (strcmp(root->lexeme.type, "RP") == 0) {
 		/* Case for production: FunDec -> ID LP RP */
 		newFunc->parameters = NULL; /* No parameters */
@@ -329,12 +330,10 @@ FieldList FunDec(Type type, Node *root) {
 		return newVar;
 	} else {
 		/* Case for production: FunDec -> ID LP VarList RP */
-		/* VarList() should return a FieldList */
 		FieldList listHead = (FieldList)malloc(sizeof(struct FieldList_));
-		listHead->tail = NULL;
+		listHead->ptail = NULL;
 		VarList(listHead, root, newVar->name);
-		newFunc->parameters = listHead->tail;
-		free(listHead);
+		newFunc->parameters = listHead->ptail;
 		debug("FunDec2 ends\n");
 		return newVar;
 	}
@@ -343,11 +342,12 @@ FieldList FunDec(Type type, Node *root) {
 void VarList(FieldList list, Node *root, char *name) {
 	debug("VarList\n");
 	FieldList newParam = ParamDec(root->child, name);
+	newParam->ptail = NULL;
 	root = root->child->sibling;
 	FieldList tmp = list;
-	while(tmp->tail != NULL)
-		tmp = tmp->tail;
-	tmp->tail = newParam;
+	while(tmp->ptail != NULL)
+		tmp = tmp->ptail;
+	tmp->ptail = newParam;
 	if (root == NULL) {
 		/* Case for production: VarList -> ParamDec */
 		return ;
@@ -784,7 +784,7 @@ int Args(Node *root, FieldList paramList) {
 			return 0;
 		else {
 			root = root->sibling->sibling;
-			return Args(root, paramList->tail);
+			return Args(root, paramList->ptail);
 		}
 	}
 	else
