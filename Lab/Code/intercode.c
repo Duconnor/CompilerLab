@@ -444,7 +444,8 @@ void translate_FunDec(Node *funDec) {
 		FieldList func = getVar(funDec->child->lexeme.value, FUNCTION);
 		FieldList params = func->type->u.function->parameters;
 		while (params != NULL) {
-			if (params->type->kind != BASIC && params->type->kind != STRUCTURE) {
+			if (params->type->kind == ARRAY) {
+				/*TODO: kind may be FUNCTION here */
 				printf("Cannot translate: Code contains variables of multi-dimensional array type or parameters of array type.\n");
 				exit(-1);
 			}
@@ -1091,7 +1092,7 @@ void constantReplace(InterCode code, int *map, int size) {
 		if (typeLeft == TEMPVAR && numLeft < size && map[numLeft] != -1) {
 			map[numLeft] = -1; /* Modified since here, not constant anymore */
 		}
-	} else if (code->kind == RETURN || code->kind == WRITE) {
+	} else if (code->kind == RETURN || code->kind == WRITE || code->kind == ARGV) {
 		/* Case for sinop */
 		int numOp = code->u.sinop.op->u.varNum;
 		int typeOp = code->u.sinop.op->kind;
