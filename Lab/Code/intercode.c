@@ -16,6 +16,10 @@ static int WIDTH = 4; /* Should be modified to proper value */
 static int OFFSET = 0;
 
 static int getAddr = 0;
+static int nesting = 0;
+
+static char *prevStrucName = NULL;
+static char *gVarName = NULL;
 
 static int OPTIMIZE = 1;
 
@@ -378,6 +382,8 @@ static int findOffset(char *structureName, char *memberName) {
 			if (strcmp(memberName, member->name) == 0) {
 				/* TODO: what if we want to access an ARRAY? */
 				/* Find what we want */
+				if (member->type->kind == STRUCTURE)
+					prevStrucName = member->type->u.structure->name;
 				return offset;
 			}
 		}
@@ -387,7 +393,7 @@ static int findOffset(char *structureName, char *memberName) {
 			/* XXX: It seems that we will also put definition inside the struture into the var list? */
 			offset += (member->type->u.array.size * findWidth(member->name));
 		} else if (member->type->kind == STRUCTURE) {
-			offset += findOffset(member->name, NULL);
+			offset += findOffset(member->type->u.structure->name, NULL);
 		}
 		member = member->tail;
 	}
@@ -708,6 +714,11 @@ int translate_Exp(Node *exp, int *place) {
 			*place = genNext(&curVarNum);
 			/*----------------------------------*/
 			FieldList var = getVar(node->lexeme.value, 0);
+			if (var->type->kind == STRUCTURE) {
+				prevStrucName = var->type->u.structure->name;
+				gVarName = var->name;
+				OFFSET = 0;
+			}
 			if (var->num == -1) {
 				var->num = *place;
 			} else {
@@ -909,13 +920,27 @@ int translate_Exp(Node *exp, int *place) {
 		} else if (strcmp(type, "DOT") == 0) {
 			if(place == NULL)
 				return -1;
-			/* For structure */
-			/* First, find the start address */
+			if (nesting) {
+				translate_Exp(node, place);
+				/* Calculate offset */
+				OFFSET += findOffset(prevStrucName, node->sibling->sibling->lexeme.value);
+				return TEMPVAR;
+			}
 			int tempStartAddr = genNext(&curTempNum);
-			int kindStartAddr = translate_Exp(node, &tempStartAddr);
-			/* Second, get the offset of the member */
-			FieldList var = getVar(node->child->lexeme.value, 0);
-			OFFSET = findOffset(var->type->u.structure->name, node->sibling->sibling->lexeme.value);
+			int kindStartAddr = VARIABLE;
+			/* For structure */
+			if (strcmp(node->child->lexeme.type, "ID") != 0) {
+				nesting = 1;
+				translate_Exp(node, &tempStartAddr);
+				nesting = 0;
+				OFFSET += findOffset(prevStrucName, node->sibling->sibling->lexeme.value);
+			} else {
+				/* First, find the start address */
+				kindStartAddr = translate_Exp(node, &tempStartAddr);
+				/* Second, get the offset of the member */
+				FieldList var = getVar(node->child->lexeme.value, 0);
+				OFFSET = findOffset(var->type->u.structure->name, node->sibling->sibling->lexeme.value);
+			}
 			/* Third, get the address of the memeber */
 			int tempAddr = genNext(&curTempNum);
 			InterCode newCode1 = NULL;
@@ -925,9 +950,11 @@ int translate_Exp(Node *exp, int *place) {
 			} else {
 				newCode1 = genBinop(kindStartAddr, CONSTANT, TEMPVAR, tempStartAddr, OFFSET, tempAddr);
 			}
-			/* Assuming Exp -> ID is alwats true */
-			char *varName = node->child->lexeme.value;
-			FieldList structVar = getVar(varName, 0);
+			if (strcmp(node->child->lexeme.type, "ID") == 0) {
+				/* Exp -> ID is not alwats true */
+				gVarName = node->child->lexeme.value;
+			}
+			FieldList structVar = getVar(gVarName, 0);
 			if (structVar->isAddress)
 				newCode1->kind = ADD;
 			else
