@@ -12,6 +12,8 @@ struct mVar_ {
     mVar next;
 };
 
+mVar mVarList;
+
 void putMVar(mVar v);
 mVar getMVar(char* name);
 
