@@ -19,7 +19,7 @@ void mAlloc(char* varName, int size);
 
 char* getVarName(Operand op);
 
-void printObjectCode(InterCode ic, FILE* fp);
+void PrintObjectCode(InterCode ic, FILE* fp);
 void mPrintLABEL(InterCode ic, FILE* fp);
 void mPrintFUNCTION(InterCode ic, FILE* fp);
 void mPrintASSIGN(InterCode ic, FILE* fp);
@@ -36,6 +36,6 @@ void mPrintDEC(InterCode ic, FILE* fp);
 void mPrintARGV(InterCode ic, FILE* fp);
 void mPrintCALL(InterCode ic, FILE* fp);
 void mPrintREAD(InterCode ic, FILE* fp);
-void mPrintWrite(InterCode ic, FILE* fp);
+void mPrintWRITE(InterCode ic, FILE* fp);
 
 #endif
