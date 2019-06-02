@@ -1,4 +1,6 @@
 #include "objectcode.h"
+#include <stdlib.h>
+#include <string.h>
 
 static void debug(char* str) {
     printf("DEBUG: %s", str);
@@ -7,6 +9,44 @@ static void debug(char* str) {
 static mVar mVarList = NULL;
 
 static int offset = 0;
+
+static void loadVar(char *varName, int varSize, int regNum, FILE *fp) {
+	/* This function load a var from memory into a register */
+	/* 'regNum' is the number of the register you want to store */
+	mVar v = getMVar(varName);
+	int offset = 0;
+	char code[256];
+    memset(code, 0, sizeof(code));
+	if (v == NULL) {
+		/* Allocate space for this var on the stack */
+		offset = mAlloc(varName, varSize);
+		/* Decrement the register $sp */
+		sprintf(code, "\taddi $sp, $sp, -%d\n", varSize);
+		fputs(code, fp);
+	} else {
+		offset = v->offset;
+	}
+	sprintf(code, "\tlw $%d, -%d($fp)\n", regNum, offset);
+	fputs(code, fp);
+}
+
+static void saveVar(char *varName, int varSize, int regNum, FILE *fp) {
+	/* Save a var from register to memory */
+    char code[256];
+    memset(code, 0, sizeof(code));
+	mVar v = getMVar(varName);
+	int offset = 0;
+	if (v == NULL) {
+		/* Allocate space for this var on the stack */
+		offset = mAlloc(varName, varSize);
+		sprintf(code, "\taddi $sp, $sp, -%d\n", varSize);
+		fputs(code, fp);
+	} else {
+		offset = v->offset;
+	}
+	sprintf(code, "\tsw $%d, -%d($fp)\n", regNum, offset);
+	fputs(code, fp);
+}
 
 void putMVar(mVar v) {
 	/* List head 'mVarList' is an empty node */
@@ -37,7 +77,7 @@ mVar getMVar(char *name) {
 	return node;
 }
 
-mVar mAlloc(char *varName, int size) {
+int mAlloc(char *varName, int size) {
 	/* varName is not in mVarList */
 	offset -= size;
 	mVar v = (mVar)malloc(sizeof(struct mVar_));
@@ -45,7 +85,7 @@ mVar mAlloc(char *varName, int size) {
 	v->offset = offset;
 	v->next = NULL;
 	putMVar(v);
-    return v;
+	return offset;
 }
 
 char* getVarName(Operand op) {
@@ -54,10 +94,13 @@ char* getVarName(Operand op) {
 		sprintf(varName, "t%d", op->u.varNum);
 	} else if (op->kind == VARIABLE) {
 		sprintf(varName, "v%d", op->u.varNum);
+	} else if (op->kind == LB) {
+		sprintf(varName, "label%d", op->u.varNum);
 	} else {
 		printf("Should not reach here in getVarName\n");
 		exit(-1);
 	}
+	return varName;
 }
 
 void PrintObjectCode(InterCode ic, FILE* fp) {
@@ -131,58 +174,165 @@ void mPrintASSIGN(InterCode ic, FILE* fp) {
     memset(line, 0, sizeof(line));
     Operand left = ic->u.assign.left;
     Operand right = ic->u.assign.right;
+    char* lname = getVarName(left);
+    char* rname = getVarName(right);
     if(right->kind == CONSTANT) {
         /* x := #k */
-        char* name = getVarName(left);
-        mVar MVarChecker = getMVar(name);
-        if(MVarChecker == NULL) 
-            MVarChecker = mAlloc(name, 4);
-        sprintf(line, "\tli $t0, %d\n", right->u.value);
-        fputs(line, fp);
-        memset(line, 0, sizeof(line));
-        sprintf(line, "\tsw $t0, %d($fp)\n", MVarChecker->offset);
+        sprintf(line, "\tli $9, %d\n", right->u.value);
         fputs(line, fp);
     } else {
         /* x := y */
-        char* lname = getVarName(left);
-        char* rname = getVarName(right);
-        mVar lMVarChecker = getMVar(lname);
-        if(lMVarChecker == NULL)
-            lMVarChecker = mAlloc(lname, 4);
-        mVar rMVarChecker = getMVar(rname);
-        if(rMVarChecker == NULL) {
-            //rMVar SHOULD be in the list
-            printf("Should not reach here in mPrintASSIGN\n");
-            exit(-1);
-        }
-        sprintf(line, "\tlw $t1, %d($fp)\n", rMVarChecker->offset);
-        fputs(line,fp);
-        memset(line, 0, sizeof(line));
-        sprintf(line, "\tmove $t0, $t1\n");
-        fputs(line, fp);
-        memset(line, 0, sizeof(line));
-        sprintf(line, "\tsw $t0, %d($fp)\n", lMVarChecker->offset);
+        loadVar(rname, 4, 8, fp);
+        sprintf(line, "\tmove $9, $8\n");
         fputs(line, fp);
     }
+    saveVar(lname, 4, 9, fp);
 }
 
 void mPrintADD(InterCode ic, FILE* fp) {
-
+    char line[100];
+    memset(line, 0, sizeof(line));
+    Operand res = ic->u.binop.result;
+    Operand op1 = ic->u.binop.op1;
+    Operand op2 = ic->u.binop.op2;
+    char* resName = getVarName(res);
+    char* op1Name = getVarName(op1);
+    char* op2Name = getVarName(op2);
+    if(op2->kind == CONSTANT) {
+        loadVar(op1Name, 4, 8, fp);
+        sprintf(line, "\taddi $9, $8, %d\n", op2->u.value);
+        fputs(line, fp);
+        saveVar(resName, 4, 9, fp);
+    } else {
+        loadVar(op1Name, 4, 8, fp);
+        loadVar(op2Name, 4, 9, fp);
+        sprintf(line, "\tadd $10, $8, $9\n");
+        fputs(line, fp);
+        saveVar(resName, 4, 10, fp);
+    }
 }
 
 void mPrintSUB(InterCode ic, FILE* fp) {
-
+    char line[100];
+    memset(line, 0, sizeof(line));
+    Operand res = ic->u.binop.result;
+    Operand op1 = ic->u.binop.op1;
+    Operand op2 = ic->u.binop.op2;
+    char* resName = getVarName(res);
+    char* op1Name = getVarName(op1);
+    char* op2Name = getVarName(op2);
+    if(op2->kind == CONSTANT) {
+        loadVar(op1Name, 4, 8, fp);
+        sprintf(line, "\taddi $9, $8, -%d\n", op2->u.value);
+        fputs(line, fp);
+        saveVar(resName, 4, 9, fp);
+    } else {
+        loadVar(op1Name, 4, 8, fp);
+        loadVar(op2Name, 4, 9, fp);
+        sprintf(line, "\tsub $10, $8, $9\n");
+        fputs(line, fp);
+        saveVar(resName, 4, 10, fp);
+    }
 }
 
 void mPrintMUL(InterCode ic, FILE* fp) {
-
+    char line[100];
+    memset(line, 0, sizeof(line));
+    Operand res = ic->u.binop.result;
+    Operand op1 = ic->u.binop.op1;
+    Operand op2 = ic->u.binop.op2;
+    char* resName = getVarName(res);
+    char* op1Name = getVarName(op1);
+    char* op2Name = getVarName(op2);
+    loadVar(op1Name, 4, 8, fp);
+    loadVar(op2Name, 4, 9, fp);
+    sprintf(line, "\tmul $10, $8, $9\n");
+    fputs(line, fp);
+    saveVar(resName, 4, 10, fp);
 }
 
 void mPrintDIV(InterCode ic, FILE* fp) {
-
+    char line[100];
+    memset(line, 0, sizeof(line));
+    Operand res = ic->u.binop.result;
+    Operand op1 = ic->u.binop.op1;
+    Operand op2 = ic->u.binop.op2;
+    char* resName = getVarName(res);
+    char* op1Name = getVarName(op1);
+    char* op2Name = getVarName(op2);
+    loadVar(op1Name, 4, 8, fp);
+    loadVar(op2Name, 4, 9, fp);
+    sprintf(line, "\tdiv $8, $9\n");
+    fputs(line, fp);
+    fprintf(line, "\tmflo $10\n");
+    fputs(line, fp);
+    saveVar(resName, 4, 10, fp);
 }
 
 
 void mPrintASSIGNP(InterCode ic, FILE *fp) {
+	/* For x := *y */
+	char *nameRight = getVarName(ic->u.assign.right);
+	char *nameLeft = getVarName(ic->u.assign.left);
+	loadVar(nameRight, 4, 8, fp);
+	char code[256];
+	sprintf(code, "lw $9, 0($8)\n");
+	fputs(code, fp);
+	saveVar(nameLeft, 4, 9, fp);
+}
 
+void mPrintPASSIGN(InterCode ic, FILE *fp) {
+	/* For *x := y */
+	char *nameRight = getVarName(ic->u.assign.right);
+	char *nameLeft = getVarName(ic->u.assign.left);
+	loadVar(nameRight, 4, 8, fp);
+	loadVar(nameLeft, 4, 9, fp);
+	char code[256];
+	sprintf(code, "sw, $8, 0($9)\n");
+	fputs(code, fp);
+	saveVar(nameRight, 4, 8, fp);
+	saveVar(nameLeft, 4, 9, fp);
+}
+
+void mPrintGOTO(InterCode ic, FILE *fp) {
+	/* For GOTO x */
+	char *label = getVarName(ic->u.sinop.op);
+	char code[256];
+	sprintf(code, "j %s\n", label);
+	fputs(code, fp);
+}
+
+void mPrintIFGOTO(InterCode ic, FILE *fp) {
+	char *nameOp1 = getVarName(ic->u.triop.op1);
+	char *nameOp2 = getVarName(ic->u.triop.op2);
+	char *label = getVarName(ic->u.triop.op3);
+	loadVar(nameOp1, 4, 8, fp);
+	loadVar(nameOp2, 4, 9, fp);
+	char *relop = ic->u.triop.relop;
+	char code[256];
+	if (strcmp(relop, "==") == 0) {
+		/* For x == y GOTO z*/
+		sprintf(code, "beq $8, $9, %s\n", label);
+	} else if (strcmp(relop, "!=") == 0) {
+		/* For x != y GOTO z */
+		sprintf(code, "bne $8, $9, %s\n", label);
+	} else if (strcmp(relop, ">") == 0) {
+		/* For x > y GOTO z */
+		sprintf(code, "bgt $8, $9, %s\n", label);
+	} else if (strcmp(relop, "<") == 0) {
+		/* For x < y GOTO z */
+		sprintf(code, "blt $8, $9, %s\n", label);
+	} else if (strcmp(relop, ">=") == 0) {
+		/* For x >= y GOTO z */
+		sprintf(code, "bge $8, $9, %s\n", label);
+	} else if (strcmp(relop, "<=") == 0) {
+		/* For x <= y GOTO z */
+		sprintf(code, "ble $8, $9, %s\n", label);
+	} else {
+		printf("Should not reach here in mPrintIFGOTO!\n");
+		exit(-1);
+	}
+	fputs(code, fp);
+	saveVar(nameOp1, 4, 8, fp);
+	saveVar(nameOp2, 4, 9, fp);
 }
