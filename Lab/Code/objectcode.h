@@ -12,10 +12,12 @@ struct mVar_ {
     mVar next;
 };
 
+mVar mVarList;
+
 void putMVar(mVar v);
 mVar getMVar(char* name);
 
-void mAlloc(char* varName, int size);
+mVar mAlloc(char* varName, int size);
 
 char* getVarName(Operand op);
 
