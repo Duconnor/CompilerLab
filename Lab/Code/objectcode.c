@@ -381,7 +381,10 @@ void mPrintRETURN(InterCode ic, FILE* fp) {
 }
 
 void mPrintDEC(InterCode ic, FILE* fp) {
-
+	char *varName = getVarName(ic->u.dec.op1);
+	int size = ic->u.dec.size;
+	loadVar(varName, size, 8, fp);
+	saveVar(varName, size, 8, fp);
 }
 
 void mPrintARGV(InterCode ic, FILE* fp) {
