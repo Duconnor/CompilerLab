@@ -1,0 +1,30 @@
+struct Product{
+	int type[10];
+	int name[10];
+};
+
+struct Cola{
+	int price[10];
+	int sold[10];
+};
+
+int main(){
+	struct Product things;
+	struct Cola cc;
+	int i = 0, j =12, result = 0;
+	while (i < 5) {
+		things.type[i] = j;
+		things.name[i] = j * j;
+		j = j - 1;
+		cc.price[i] = j;
+		cc.sold[i] = j / 3;
+		i = i + 1;
+	}
+	i = 0;
+	while (i < 5) {
+		result = result + things.type[i] * cc.sold[4-i];
+		i = i + 1;
+	}
+	write(result);
+	return 0;
+}

@@ -21,7 +21,7 @@ static int nesting = 0;
 static char *prevStrucName = NULL;
 static char *gVarName = NULL;
 
-static int OPTIMIZE = 1;
+static int OPTIMIZE = 0;
 
 static void debug(char *str) {
     //printf("%s", str);
