@@ -19,7 +19,9 @@ int mAlloc(char* varName, int size);
 
 char* getVarName(Operand op);
 
-void PrintObjectCode(InterCode ic, FILE* fp);
+void printObjectCode(InterCode ic, FILE* fp);
+void printObjectCodes(char* fileName);
+
 void mPrintLABEL(InterCode ic, FILE* fp);
 void mPrintFUNCTION(InterCode ic, FILE* fp);
 void mPrintASSIGN(InterCode ic, FILE* fp);

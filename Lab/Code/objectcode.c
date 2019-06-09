@@ -5,6 +5,7 @@
 static void debug(char* str) {
     printf("DEBUG: %s", str);
 }
+extern InterCode codesHead, codesTail; 
 
 static mVar mVarList = NULL;
 
@@ -105,7 +106,7 @@ char* getVarName(Operand op) {
 	return varName;
 }
 
-void PrintObjectCode(InterCode ic, FILE* fp) {
+void printObjectCode(InterCode ic, FILE* fp) {
     switch(ic->kind) {
         case LABEL:
             mPrintLABEL(ic, fp);
@@ -163,6 +164,42 @@ void PrintObjectCode(InterCode ic, FILE* fp) {
             debug("bad code type!\n");
     }
 }
+
+void printObjectCodes(char* fileName) {
+    FILE *fp = fopen(fileName, "w");
+    if(fp == NULL) {
+        printf("Error: Cannot open file %s\n!", fileName);
+        exit(-1);
+    }
+    fputs(".data\n", fp);
+    fputs("_prompt: .asciiz \"Enter an integer:\"\n", fp);
+    fputs("_ret: .asciiz \"\\n\"\n", fp);
+    fputs(".global main\n", fp);
+    fputs(".text\n", fp);
+    
+    fputs("read:\n", fp);
+    fputs("\tli $v0, 4\n", fp);
+    fputs("\tla $a0, _prompt\n", fp);
+    fputs("\tsyscall\n", fp);
+    fputs("\tli $v0, 5\n", fp);
+    fputs("\tsyscall\n", fp);
+    fputs("\tjr $ra\n", fp);
+
+    fputs("\nwrite:\n", fp);
+    fputs("\tli $v0, 1\n", fp);
+    fputs("\tsyscall\n", fp);
+    fputs("\tli $v0, 4\n", fp);
+    fputs("\tla $a0, _ret\n", fp);
+    fputs("\tsyscall\n", fp);
+    fputs("\tmove $v0, $0\n", fp);
+    fputs("\tjr $ra\n", fp);
+
+    InterCode currIC = codesHead;
+    do{
+        printObjectCode(currIC, fp);
+        currIC = currIC->next;
+    }while(currIC != codesHead);
+}   
 
 void mPrintLABEL(InterCode ic, FILE* fp) {
     char line[100];
@@ -340,9 +377,10 @@ void mPrintIFGOTO(InterCode ic, FILE *fp) {
 }
 
 void mPrintFUNCTION(InterCode ic, FILE* fp) {
+    offset = 0;
     char line[100];
     memset(line, 0, sizeof(line));
-    sprintf(line, "%s:\n", ic->u.sinop.op->u.name);
+    sprintf(line, "\n%s:\n", ic->u.sinop.op->u.name);
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, -4\n");
     fputs(line, fp);
@@ -390,7 +428,7 @@ void mPrintARGV(InterCode ic, FILE* fp) {
 	loadVar(varName, 4, 8, fp);
 	char line[100];
 	memset(line, 0, sizeof(line));
-	sprintf(line, "\tsub $sp, $sp, 4\n");
+	sprintf(line, "\taddi $sp, $sp, -4\n");
 	fputs(line, fp);
 	sprintf(line, "\tsw $8, 0($sp)\n");
 	fputs(line, fp);
@@ -402,7 +440,7 @@ void mPrintCALL(InterCode ic, FILE* fp) {
 	char *varName = getVarName(ic->u.call.op1);
 	char line[100];
 	memset(line, 0, sizeof(line));
-	sprintf(line, "\tsub $sp, $sp, 4\n");
+	sprintf(line, "\taddi $sp, $sp, -4\n");
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
@@ -410,7 +448,7 @@ void mPrintCALL(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
-	sprintf(line, "\tadd $sp, $sp, 4\n");
+	sprintf(line, "\taddi $sp, $sp, 4\n");
 	fputs(line, fp);
 	loadVar(varName, 4, 8, fp);
 	sprintf(line, "\tmove $v0, $8\n");
