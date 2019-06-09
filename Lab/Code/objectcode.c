@@ -174,7 +174,7 @@ void printObjectCodes(char* fileName) {
     fputs(".data\n", fp);
     fputs("_prompt: .asciiz \"Enter an integer:\"\n", fp);
     fputs("_ret: .asciiz \"\\n\"\n", fp);
-    fputs(".global main\n", fp);
+    fputs(".globl main\n", fp);
     fputs(".text\n", fp);
     
     fputs("read:\n", fp);
@@ -214,13 +214,13 @@ void mPrintASSIGN(InterCode ic, FILE* fp) {
     Operand left = ic->u.assign.left;
     Operand right = ic->u.assign.right;
     char* lname = getVarName(left);
-    char* rname = getVarName(right);
     if(right->kind == CONSTANT) {
         /* x := #k */
         sprintf(line, "\tli $9, %d\n", right->u.value);
         fputs(line, fp);
     } else {
         /* x := y */
+		char* rname = getVarName(right);
         loadVar(rname, 4, 8, fp);
         sprintf(line, "\tmove $9, $8\n");
         fputs(line, fp);
@@ -410,7 +410,7 @@ void mPrintRETURN(InterCode ic, FILE* fp) {
     fputs(line, fp);
     sprintf(line, "\tmove $sp, $fp\n");
     fputs(line, fp);
-    sprinft(line, "\tlw $fp, 0($sp)\n");
+    sprintf(line, "\tlw $fp, 0($sp)\n");
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, 4\n");
     fputs(line, fp);
@@ -455,7 +455,7 @@ void mPrintCALL(InterCode ic, FILE* fp) {
 	sprintf(line, "\taddi $sp, $sp, 4\n");
 	fputs(line, fp);
 	loadVar(varName, 4, 8, fp);
-	sprintf(line, "\tmove $v0, $8\n");
+	sprintf(line, "\tmove $8, $v0\n");
 	fputs(line, fp);
 	saveVar(varName, 4, 8, fp);
 }
@@ -475,7 +475,7 @@ void mPrintREAD(InterCode ic, FILE* fp) {
 	sprintf(line, "\taddi, $sp, $sp, 4\n");
 	fputs(line, fp);
 	loadVar(varName, 4, 8, fp);
-	sprintf(line, "\tmove $v0, $8\n");
+	sprintf(line, "\tmove $8, $v0\n");
 	fputs(line, fp);
 	saveVar(varName, 4, 8, fp);
 }
@@ -485,12 +485,8 @@ void mPrintWRITE(InterCode ic, FILE* fp) {
 	char line[100];
 	memset(line, 0, sizeof(line));
 	loadVar(varName, 4, 8, fp);
-	/* Push it on stack */
-	sprintf(line, "\taddi $sp, $sp, -4\n");
+	sprintf(line, "\tmove $a0, $8\n");
 	fputs(line, fp);
-	sprintf(line, "\tsw $8, 0($sp)\n");
-	fputs(line, fp);
-	offset -= 4;
 	/* Store, call and retrieve */
 	sprintf(line, "\taddi, $sp, $sp, -4\n");
 	fputs(line, fp);

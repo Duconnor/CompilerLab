@@ -4,6 +4,7 @@
 #include "semantic.h"
 #include "table.h"
 #include "intercode.h"
+#include "objectcode.h"
 
 extern FILE *yyin;
 extern int yylineno;
@@ -36,7 +37,8 @@ int main(int argc, char **argv) {
 		}
 		if(sErrorFree) {
 			translate_Program(tree);
-			printInterCodes(argv[2]);
+			printObjectCodes(argv[2]);
+			//printInterCodes(argv[3]);
 		}
 
 
