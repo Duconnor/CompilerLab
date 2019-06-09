@@ -2,6 +2,7 @@
 #define INTERCODE_H
 
 #include "tree.h"
+#include <stdio.h>
 
 typedef struct Operand_* Operand;
 typedef struct InterCode_* InterCode;

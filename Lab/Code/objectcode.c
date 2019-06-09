@@ -81,7 +81,7 @@ int mAlloc(char *varName, int size) {
 	/* varName is not in mVarList */
 	offset -= size;
 	mVar v = (mVar)malloc(sizeof(struct mVar_));
-	v->name = *varName;
+	v->name = varName;
 	v->offset = offset;
 	v->next = NULL;
 	putMVar(v);
@@ -264,7 +264,7 @@ void mPrintDIV(InterCode ic, FILE* fp) {
     loadVar(op2Name, 4, 9, fp);
     sprintf(line, "\tdiv $8, $9\n");
     fputs(line, fp);
-    fprintf(line, "\tmflo $10\n");
+    sprintf(line, "\tmflo $10\n");
     fputs(line, fp);
     saveVar(resName, 4, 10, fp);
 }
@@ -312,22 +312,22 @@ void mPrintIFGOTO(InterCode ic, FILE *fp) {
 	char code[256];
 	if (strcmp(relop, "==") == 0) {
 		/* For x == y GOTO z*/
-		sprintf(code, "beq $8, $9, %s\n", label);
+		sprintf(code, "\tbeq $8, $9, %s\n", label);
 	} else if (strcmp(relop, "!=") == 0) {
 		/* For x != y GOTO z */
-		sprintf(code, "bne $8, $9, %s\n", label);
+		sprintf(code, "\tbne $8, $9, %s\n", label);
 	} else if (strcmp(relop, ">") == 0) {
 		/* For x > y GOTO z */
-		sprintf(code, "bgt $8, $9, %s\n", label);
+		sprintf(code, "\tbgt $8, $9, %s\n", label);
 	} else if (strcmp(relop, "<") == 0) {
 		/* For x < y GOTO z */
-		sprintf(code, "blt $8, $9, %s\n", label);
+		sprintf(code, "\tblt $8, $9, %s\n", label);
 	} else if (strcmp(relop, ">=") == 0) {
 		/* For x >= y GOTO z */
-		sprintf(code, "bge $8, $9, %s\n", label);
+		sprintf(code, "\tbge $8, $9, %s\n", label);
 	} else if (strcmp(relop, "<=") == 0) {
 		/* For x <= y GOTO z */
-		sprintf(code, "ble $8, $9, %s\n", label);
+		sprintf(code, "\tble $8, $9, %s\n", label);
 	} else {
 		printf("Should not reach here in mPrintIFGOTO!\n");
 		exit(-1);
@@ -336,3 +336,32 @@ void mPrintIFGOTO(InterCode ic, FILE *fp) {
 	saveVar(nameOp1, 4, 8, fp);
 	saveVar(nameOp2, 4, 9, fp);
 }
+
+void mPrintFUNCTION(InterCode ic, FILE* fp) {
+
+}
+
+void mPrintRETURN(InterCode ic, FILE* fp) {
+
+}
+
+void mPrintDEC(InterCode ic, FILE* fp) {
+
+}
+
+void mPrintARGV(InterCode ic, FILE* fp) {
+
+}
+
+void mPrintCALL(InterCode ic, FILE* fp) {
+
+}
+
+void mPrintREAD(InterCode ic, FILE* fp) {
+    
+}
+
+void mPrintWRITE(InterCode ic, FILE* fp) {
+
+}
+
