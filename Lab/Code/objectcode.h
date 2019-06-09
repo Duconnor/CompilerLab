@@ -34,6 +34,7 @@ void mPrintIFGOTO(InterCode ic, FILE* fp);
 void mPrintRETURN(InterCode ic, FILE* fp);
 void mPrintDEC(InterCode ic, FILE* fp);
 void mPrintARGV(InterCode ic, FILE* fp);
+void mPrintPARAM(InterCode ic, FILE* fp);
 void mPrintCALL(InterCode ic, FILE* fp);
 void mPrintREAD(InterCode ic, FILE* fp);
 void mPrintWRITE(InterCode ic, FILE* fp);

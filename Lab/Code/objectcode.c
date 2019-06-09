@@ -28,7 +28,7 @@ static void loadVar(char *varName, int varSize, int regNum, FILE *fp) {
 	} else {
 		offset = v->offset;
 	}
-	sprintf(code, "\tlw $%d, -%d($fp)\n", regNum, offset);
+	sprintf(code, "\tlw $%d, %d($fp)\n", regNum, offset);
 	fputs(code, fp);
 }
 
@@ -46,7 +46,7 @@ static void saveVar(char *varName, int varSize, int regNum, FILE *fp) {
 	} else {
 		offset = v->offset;
 	}
-	sprintf(code, "\tsw $%d, -%d($fp)\n", regNum, offset);
+	sprintf(code, "\tsw $%d, %d($fp)\n", regNum, offset);
 	fputs(code, fp);
 }
 
@@ -225,7 +225,7 @@ void mPrintSUB(InterCode ic, FILE* fp) {
     char* op2Name = getVarName(op2);
     if(op2->kind == CONSTANT) {
         loadVar(op1Name, 4, 8, fp);
-        sprintf(line, "\taddi $9, $8, -%d\n", op2->u.value);
+        sprintf(line, "\taddi $9, $8, %d\n", -op2->u.value);
         fputs(line, fp);
         saveVar(resName, 4, 9, fp);
     } else {
@@ -340,10 +340,44 @@ void mPrintIFGOTO(InterCode ic, FILE *fp) {
 }
 
 void mPrintFUNCTION(InterCode ic, FILE* fp) {
+    char line[100];
+    memset(line, 0, sizeof(line));
+    sprintf(line, "%s:\n", ic->u.sinop.op->u.name);
+    fputs(line, fp);
+    sprintf(line, "\taddi $sp, $sp, -4\n");
+    fputs(line, fp);
+    sprintf(line, "\tsw $fp, 0($sp)\n");
+    fputs(line, fp);
+    sprintf(line, "\tmove $fp, $sp\n");
+    fputs(line, fp);
 }
 
-void mPrintRETURN(InterCode ic, FILE* fp) {
+void mPrintPARAM(InterCode ic, FILE* fp) {
+    mVar v = (mVar)malloc(sizeof(struct mVar_));
+    v->name = getVarName(ic->u.sinop.op);
+    v->offset = 8 + 4 * pCount;
+    v->next = NULL;
+    putMVar(v);
+    if(ic->next->kind != PARAM)
+        pCount = 0;    
+}
 
+
+void mPrintRETURN(InterCode ic, FILE* fp) {
+    char* retVarName = getVarName(ic->u.sinop.op);
+    mVar v = getMVar(retVarName);
+    char line[100];
+    memset(line, 0, sizeof(line));
+    sprintf(line, "\tlw $v0, %d($fp)\n", v->offset);
+    fputs(line, fp);
+    sprintf(line, "\tmove $sp, $fp\n");
+    fputs(line, fp);
+    sprinft(line, "\tlw $fp, 0($sp)\n");
+    fputs(line, fp);
+    sprintf(line, "\taddi $sp, $sp, 4\n");
+    fputs(line, fp);
+    sprintf(line, "\tjr $ra\n");
+    fputs(line, fp);
 }
 
 void mPrintDEC(InterCode ic, FILE* fp) {
@@ -361,6 +395,7 @@ void mPrintARGV(InterCode ic, FILE* fp) {
 	sprintf(line, "\tsw $8, 0($sp)\n");
 	fputs(line, fp);
 }
+
 
 void mPrintCALL(InterCode ic, FILE* fp) {
 	char *funcName = ic->u.call.op2->u.name;
@@ -384,7 +419,7 @@ void mPrintCALL(InterCode ic, FILE* fp) {
 }
 
 void mPrintREAD(InterCode ic, FILE* fp) {
-    
+
 }
 
 void mPrintWRITE(InterCode ic, FILE* fp) {
