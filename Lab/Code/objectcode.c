@@ -10,6 +10,8 @@ static mVar mVarList = NULL;
 
 static int offset = 0;
 
+static int pCount = 0;
+
 static void loadVar(char *varName, int varSize, int regNum, FILE *fp) {
 	/* This function load a var from memory into a register */
 	/* 'regNum' is the number of the register you want to store */
@@ -338,7 +340,6 @@ void mPrintIFGOTO(InterCode ic, FILE *fp) {
 }
 
 void mPrintFUNCTION(InterCode ic, FILE* fp) {
-
 }
 
 void mPrintRETURN(InterCode ic, FILE* fp) {
@@ -350,11 +351,36 @@ void mPrintDEC(InterCode ic, FILE* fp) {
 }
 
 void mPrintARGV(InterCode ic, FILE* fp) {
-
+	Operand arg = ic->u.sinop.op;
+	char *varName = getVarName(arg);
+	loadVar(varName, 4, 8, fp);
+	char line[100];
+	memset(line, 0, sizeof(line));
+	sprintf(line, "\tsub $sp, $sp, 4\n");
+	fputs(line, fp);
+	sprintf(line, "\tsw $8, 0($sp)\n");
+	fputs(line, fp);
 }
 
 void mPrintCALL(InterCode ic, FILE* fp) {
-
+	char *funcName = ic->u.call.op2->u.name;
+	char *varName = getVarName(ic->u.call.op1);
+	char line[100];
+	memset(line, 0, sizeof(line));
+	sprintf(line, "\tsub $sp, $sp, 4\n");
+	fputs(line, fp);
+	sprintf(line, "\tsw $ra, 0($sp)\n");
+	fputs(line, fp);
+	sprintf(line, "\tjal %s\n", funcName);
+	fputs(line, fp);
+	sprintf(line, "\tlw $ra, 0($sp)\n");
+	fputs(line, fp);
+	sprintf(line, "\tadd $sp, $sp, 4\n");
+	fputs(line, fp);
+	loadVar(varName, 4, 8, fp);
+	sprintf(line, "\tmove $v0, $8\n");
+	fputs(line, fp);
+	saveVar(varName, 4, 8, fp);
 }
 
 void mPrintREAD(InterCode ic, FILE* fp) {
