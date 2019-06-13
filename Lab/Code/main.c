@@ -37,8 +37,8 @@ int main(int argc, char **argv) {
 		}
 		if(sErrorFree) {
 			translate_Program(tree);
-			printObjectCodes(argv[2]);
 			//printInterCodes(argv[3]);
+			printObjectCodes(argv[2]);
 		}
 
 

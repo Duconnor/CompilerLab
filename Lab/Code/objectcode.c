@@ -100,6 +100,7 @@ char* getVarName(Operand op) {
 	} else if (op->kind == LB) {
 		sprintf(varName, "label%d", op->u.varNum);
 	} else {
+		printf("%d\n", op->kind);
 		printf("Should not reach here in getVarName\n");
 		exit(-1);
 	}
@@ -159,9 +160,12 @@ void printObjectCode(InterCode ic, FILE* fp) {
         case WRITE:
             mPrintWRITE(ic, fp);
             break;
+		case ADDR:
+			mPrintADDR(ic, fp);
+			break;
         default:
-            exit(-1);
             debug("bad code type!\n");
+            exit(-1);
     }
 }
 
@@ -204,7 +208,7 @@ void printObjectCodes(char* fileName) {
 void mPrintLABEL(InterCode ic, FILE* fp) {
     char line[100];
     memset(line, 0, sizeof(line));
-    sprintf(line, "label%d\n", ic->u.sinop.op->u.varNum);
+    sprintf(line, "label%d:\n", ic->u.sinop.op->u.varNum);
     fputs(line, fp);
 }
 
@@ -315,7 +319,7 @@ void mPrintASSIGNP(InterCode ic, FILE *fp) {
 	char *nameLeft = getVarName(ic->u.assign.left);
 	loadVar(nameRight, 4, 8, fp);
 	char code[256];
-	sprintf(code, "lw $9, 0($8)\n");
+	sprintf(code, "\tlw $9, 0($8)\n");
 	fputs(code, fp);
 	saveVar(nameLeft, 4, 9, fp);
 }
@@ -327,7 +331,7 @@ void mPrintPASSIGN(InterCode ic, FILE *fp) {
 	loadVar(nameRight, 4, 8, fp);
 	loadVar(nameLeft, 4, 9, fp);
 	char code[256];
-	sprintf(code, "sw, $8, 0($9)\n");
+	sprintf(code, "\tsw, $8, 0($9)\n");
 	fputs(code, fp);
 	saveVar(nameRight, 4, 8, fp);
 	saveVar(nameLeft, 4, 9, fp);
@@ -337,7 +341,7 @@ void mPrintGOTO(InterCode ic, FILE *fp) {
 	/* For GOTO x */
 	char *label = getVarName(ic->u.sinop.op);
 	char code[256];
-	sprintf(code, "j %s\n", label);
+	sprintf(code, "\tj %s\n", label);
 	fputs(code, fp);
 }
 
@@ -500,3 +504,22 @@ void mPrintWRITE(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 }
 
+void mPrintADDR(InterCode ic, FILE *fp) {
+	char *varName = getVarName(ic->u.binop.op1);
+	char *resName = getVarName(ic->u.binop.result);
+	char line[256];
+	memset(line, 0, sizeof(line));
+	if (ic->u.binop.op2->kind == CONSTANT) {
+		sprintf(line, "\tli $9, %d\n", ic->u.binop.op2->u.value);
+		fputs(line, fp);
+	} else {
+		char *varName2 = getVarName(ic->u.binop.op2);
+		loadVar(varName2, 4, 9, fp);
+	}
+	mVar v = getMVar(varName);
+	sprintf(line, "\taddi $8, $fp, %d\n", v->offset);
+	fputs(line, fp);
+	sprintf(line, "\tadd $10, $8, $9\n");
+	fputs(line, fp);
+	saveVar(resName, 4, 10, fp);
+}
