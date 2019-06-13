@@ -40,5 +40,6 @@ void mPrintPARAM(InterCode ic, FILE* fp);
 void mPrintCALL(InterCode ic, FILE* fp);
 void mPrintREAD(InterCode ic, FILE* fp);
 void mPrintWRITE(InterCode ic, FILE* fp);
+void mPrintADDR(InterCode ic, FILE* fp);
 
 #endif

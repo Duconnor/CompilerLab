@@ -95,7 +95,7 @@ char* getVarName(Operand op) {
 	char *varName = (char*)malloc(50 * sizeof(char));
 	if (op->kind == TEMPVAR) {
 		sprintf(varName, "t%d", op->u.varNum);
-	} else if (op->kind == VARIABLE) {
+	} else if (op->kind == VARIABLE || op->kind == AORS) {
 		sprintf(varName, "v%d", op->u.varNum);
 	} else if (op->kind == LB) {
 		sprintf(varName, "label%d", op->u.varNum);
