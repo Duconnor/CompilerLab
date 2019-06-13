@@ -1,0 +1,26 @@
+int compare(int a, int b) {
+    write(a);
+    write(b);
+	if (a > b) return a;
+	if (a < b) return b;
+	return 0;
+}
+
+int myadd(int aa, int bb) {
+	return aa + bb;
+}
+
+int main() {
+    int ar[3];
+    int n = 0, cc, dd;
+    while(n < 3) {
+        ar[n] = read();
+        n = n + 1;
+    }
+    n = 0;    
+    cc = myadd(ar[1], ar[2]);
+    write(cc);
+    dd = compare(ar[0], cc);
+    write(dd);
+    return 0;
+}

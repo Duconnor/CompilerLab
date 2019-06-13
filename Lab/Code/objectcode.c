@@ -93,9 +93,9 @@ int mAlloc(char *varName, int size) {
 
 char* getVarName(Operand op) {
 	char *varName = (char*)malloc(50 * sizeof(char));
-	if (op->kind == TEMPVAR) {
+	if (op->kind == TEMPVAR || op->kind == AORS) {
 		sprintf(varName, "t%d", op->u.varNum);
-	} else if (op->kind == VARIABLE || op->kind == AORS) {
+	} else if (op->kind == VARIABLE) {
 		sprintf(varName, "v%d", op->u.varNum);
 	} else if (op->kind == LB) {
 		sprintf(varName, "label%d", op->u.varNum);
@@ -163,6 +163,9 @@ void printObjectCode(InterCode ic, FILE* fp) {
 		case ADDR:
 			mPrintADDR(ic, fp);
 			break;
+        case PARAM:
+            mPrintPARAM(ic, fp);
+            break;
         default:
             debug("bad code type!\n");
             exit(-1);
@@ -404,6 +407,7 @@ void mPrintPARAM(InterCode ic, FILE* fp) {
     mVar v = (mVar)malloc(sizeof(struct mVar_));
     v->name = getVarName(ic->u.sinop.op);
     v->offset = 8 + 4 * pCount;
+    pCount++;
     v->next = NULL;
     putMVar(v);
     if(ic->next->kind != PARAM)

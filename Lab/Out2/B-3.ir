@@ -1,0 +1,118 @@
+FUNCTION isPrime :
+PARAM v1
+t2 := #4
+t1 := v1 / t2
+v2 := t1
+t3 := #2
+v3 := t3
+LABEL label1 :
+IF v3 < v2 GOTO label2
+GOTO label3
+LABEL label2 :
+t5 := v1 / v3
+t5 := t5 * v3
+IF v1 == t5 GOTO label4
+GOTO label5
+LABEL label4 :
+t6 := #0
+RETURN t6
+LABEL label5 :
+t8 := #1
+t7 := v3 + t8
+v3 := t7
+GOTO label1
+LABEL label3 :
+t9 := #1
+RETURN t9
+FUNCTION isRever :
+PARAM v4
+v5 := v4
+DEC v6 40
+t10 := #0
+v7 := t10
+t11 := #0
+v8 := t11
+LABEL label6 :
+t13 := #0
+IF v5 != t13 GOTO label7
+GOTO label8
+LABEL label7 :
+t15 := v7 * #4
+t13 := &v6 + t15
+t19 := #10
+t18 := v5 / t19
+t20 := #10
+t17 := t18 * t20
+t16 := v5 - t17
+*t13 := t16
+t22 := #10
+t21 := v5 / t22
+v5 := t21
+t24 := #1
+t23 := v7 + t24
+v7 := t23
+GOTO label6
+LABEL label8 :
+t26 := #1
+t25 := v7 - t26
+v7 := t25
+LABEL label9 :
+IF v8 != v7 GOTO label10
+GOTO label11
+LABEL label10 :
+t30 := v8 * #4
+t29 := &v6 + t30
+t27 := *t29
+t32 := v7 * #4
+t31 := &v6 + t32
+t28 := *t31
+IF t27 != t28 GOTO label12
+GOTO label13
+LABEL label12 :
+t33 := #0
+RETURN t33
+LABEL label13 :
+t35 := #1
+t34 := v8 + t35
+v8 := t34
+t37 := #1
+t36 := v7 - t37
+v7 := t36
+GOTO label9
+LABEL label11 :
+t38 := #1
+RETURN t38
+FUNCTION main :
+t39 := #100
+v9 := t39
+t40 := #110
+v10 := t40
+v11 := v9
+LABEL label14 :
+IF v11 < v10 GOTO label15
+GOTO label16
+LABEL label15 :
+ARG v11
+t41 := CALL isPrime
+t42 := #1
+IF t41 == t42 GOTO label17
+GOTO label18
+LABEL label17 :
+WRITE v11
+LABEL label18 :
+ARG v11
+t44 := CALL isRever
+t45 := #1
+IF t44 == t45 GOTO label19
+GOTO label20
+LABEL label19 :
+t47 := #0 - v11
+WRITE t47
+LABEL label20 :
+t49 := #1
+t48 := v11 + t49
+v11 := t48
+GOTO label14
+LABEL label16 :
+t50 := #0
+RETURN t50
