@@ -286,9 +286,15 @@ void mPrintMUL(InterCode ic, FILE* fp) {
     Operand op2 = ic->u.binop.op2;
     char* resName = getVarName(res);
     char* op1Name = getVarName(op1);
-    char* op2Name = getVarName(op2);
+    if(op2->kind == CONSTANT) {
+        sprintf(line, "\tli $9, %d\n", op2->u.value);
+        fputs(line, fp);
+    }
+    else {
+        char* op2Name = getVarName(op2);
+        loadVar(op2Name, 4, 9, fp);
+    }
     loadVar(op1Name, 4, 8, fp);
-    loadVar(op2Name, 4, 9, fp);
     sprintf(line, "\tmul $10, $8, $9\n");
     fputs(line, fp);
     saveVar(resName, 4, 10, fp);
