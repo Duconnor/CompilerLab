@@ -34,18 +34,18 @@ syntax-c: $(YFILE)
 # 定义的一些伪目标
 .PHONY: clean test
 test:
-	./parser ../Test/A-1.cmm ../Out/A-1.ir
-	./parser ../Test/A-2.cmm ../Out/A-2.ir
-	./parser ../Test/A-3.cmm ../Out/A-3.ir
-	./parser ../Test/A-4.cmm ../Out/A-4.ir
-	./parser ../Test/A-5.cmm ../Out/A-5.ir
-	./parser ../Test/B-1.cmm ../Out/B-1.ir 
-	./parser ../Test/B-2.cmm ../Out/B-2.ir
-	./parser ../Test/B-3.cmm ../Out/B-3.ir
-	./parser ../Test/C-1.cmm ../Out/C-1.ir
-	./parser ../Test/C-2.cmm ../Out/C-2.ir
-	./parser ../Test/D.cmm ../Out/D.ir
-	./parser ../Test/E-1.cmm ../Out/E-1.ir      
+	./parser ../Test/A_1.cmm ../Out/A-1.s ../Out2/A-1.ir
+	./parser ../Test/A_2.cmm ../Out/A-2.s ../Out2/A-2.ir
+	./parser ../Test/A_3.cmm ../Out/A-3.s ../Out2/A-3.ir
+	./parser ../Test/A_4.cmm ../Out/A-4.s ../Out2/A-4.ir
+	./parser ../Test/A_5.cmm ../Out/A-5.s ../Out2/A-5.ir
+	./parser ../Test/B_1.cmm ../Out/B-1.s ../Out2/B-1.ir
+	./parser ../Test/B_2.cmm ../Out/B-2.s ../Out2/B-2.ir
+	./parser ../Test/B_3.cmm ../Out/B-3.s ../Out2/B-3.ir
+	./parser ../Test/C_1.cmm ../Out/C-1.s ../Out2/C-1.ir
+	./parser ../Test/C_2.cmm ../Out/C-2.s ../Out2/C-2.ir
+	./parser ../Test/D.cmm ../Out/D.s ../Out2/D.ir
+	./parser ../Test/E_1.cmm ../Out/E-1.s ../Out2/E-1.ir      
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

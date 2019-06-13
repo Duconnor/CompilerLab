@@ -204,7 +204,7 @@ void printObjectCodes(char* fileName) {
 void mPrintLABEL(InterCode ic, FILE* fp) {
     char line[100];
     memset(line, 0, sizeof(line));
-    sprintf(line, "label%d\n", ic->u.sinop.op->u.varNum);
+    sprintf(line, "label%d:\n", ic->u.sinop.op->u.varNum);
     fputs(line, fp);
 }
 
@@ -282,9 +282,15 @@ void mPrintMUL(InterCode ic, FILE* fp) {
     Operand op2 = ic->u.binop.op2;
     char* resName = getVarName(res);
     char* op1Name = getVarName(op1);
-    char* op2Name = getVarName(op2);
+    if(op2->kind == CONSTANT) {
+        sprintf(line, "\tli $9, %d\n", op2->u.value);
+        fputs(line, fp);
+    }
+    else {
+        char* op2Name = getVarName(op2);
+        loadVar(op2Name, 4, 9, fp);
+    }
     loadVar(op1Name, 4, 8, fp);
-    loadVar(op2Name, 4, 9, fp);
     sprintf(line, "\tmul $10, $8, $9\n");
     fputs(line, fp);
     saveVar(resName, 4, 10, fp);
@@ -315,7 +321,7 @@ void mPrintASSIGNP(InterCode ic, FILE *fp) {
 	char *nameLeft = getVarName(ic->u.assign.left);
 	loadVar(nameRight, 4, 8, fp);
 	char code[256];
-	sprintf(code, "lw $9, 0($8)\n");
+	sprintf(code, "\tlw $9, 0($8)\n");
 	fputs(code, fp);
 	saveVar(nameLeft, 4, 9, fp);
 }
@@ -327,7 +333,7 @@ void mPrintPASSIGN(InterCode ic, FILE *fp) {
 	loadVar(nameRight, 4, 8, fp);
 	loadVar(nameLeft, 4, 9, fp);
 	char code[256];
-	sprintf(code, "sw, $8, 0($9)\n");
+	sprintf(code, "\tsw, $8, 0($9)\n");
 	fputs(code, fp);
 	saveVar(nameRight, 4, 8, fp);
 	saveVar(nameLeft, 4, 9, fp);
@@ -337,7 +343,7 @@ void mPrintGOTO(InterCode ic, FILE *fp) {
 	/* For GOTO x */
 	char *label = getVarName(ic->u.sinop.op);
 	char code[256];
-	sprintf(code, "j %s\n", label);
+	sprintf(code, "\tj %s\n", label);
 	fputs(code, fp);
 }
 
