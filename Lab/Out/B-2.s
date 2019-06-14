@@ -59,8 +59,8 @@ label1:
 	sw $9, -68($fp)
 	j label3
 label2:
-	li $9, 4
 	lw $8, -56($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -72($fp)
@@ -146,8 +146,8 @@ label8:
 	li $9, 2
 	addi $sp, $sp, -4
 	sw $9, -108($fp)
-	lw $9, -108($fp)
 	lw $8, -56($fp)
+	lw $9, -108($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -112($fp)
@@ -166,8 +166,8 @@ label8:
 	li $9, 2
 	addi $sp, $sp, -4
 	sw $9, -128($fp)
-	lw $9, -128($fp)
 	lw $8, -56($fp)
+	lw $9, -128($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -132($fp)
@@ -190,8 +190,8 @@ label8:
 	sw $9, -8($fp)
 	j label11
 label10:
-	li $9, 4
 	lw $8, -124($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -148($fp)
@@ -215,8 +215,8 @@ label10:
 	sw $9, -8($fp)
 	j label13
 label14:
-	li $9, 4
 	lw $8, -144($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -164($fp)
@@ -229,8 +229,8 @@ label14:
 	lw $9, 0($8)
 	addi $sp, $sp, -4
 	sw $9, -172($fp)
-	li $9, 4
 	lw $8, -124($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -176($fp)
@@ -250,8 +250,8 @@ label14:
 	sw $9, -184($fp)
 	j label13
 label12:
-	li $9, 4
 	lw $8, -144($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -188($fp)
@@ -271,8 +271,8 @@ label12:
 	move $9, $8
 	sw $9, -124($fp)
 label13:
-	li $9, 4
 	lw $8, -56($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -200($fp)
@@ -297,8 +297,8 @@ label15:
 	lw $8, -200($fp)
 	move $9, $8
 	sw $9, -64($fp)
-	li $9, 4
 	lw $8, -124($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -212($fp)
@@ -307,8 +307,8 @@ label15:
 	add $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -216($fp)
-	li $9, 4
 	lw $8, -56($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -220($fp)
@@ -326,8 +326,8 @@ label15:
 	sw, $8, 0($9)
 	sw $8, -228($fp)
 	sw $9, -216($fp)
-	li $9, 4
 	lw $8, -56($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -232($fp)
@@ -375,8 +375,8 @@ label17:
 	sw $9, -8($fp)
 	j label19
 label18:
-	li $9, 4
 	lw $8, -56($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -252($fp)

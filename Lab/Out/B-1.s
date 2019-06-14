@@ -37,8 +37,8 @@ label1:
 	li $9, 1000000000
 	addi $sp, $sp, -4
 	sw $9, -8($fp)
-	lw $9, -8($fp)
 	lw $8, 12($fp)
+	lw $9, -8($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -12($fp)
@@ -88,8 +88,8 @@ label2:
 	li $9, 1000000000
 	addi $sp, $sp, -4
 	sw $9, -48($fp)
-	lw $9, -48($fp)
 	lw $8, 12($fp)
+	lw $9, -48($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -52($fp)

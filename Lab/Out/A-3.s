@@ -91,8 +91,8 @@ label5:
 	mflo $10
 	addi $sp, $sp, -4
 	sw $10, -36($fp)
-	lw $9, -16($fp)
 	lw $8, -36($fp)
+	lw $9, -16($fp)
 	mul $10, $8, $9
 	sw $10, -36($fp)
 	lw $8, -28($fp)
@@ -108,8 +108,8 @@ label7:
 	mflo $10
 	addi $sp, $sp, -4
 	sw $10, -40($fp)
-	lw $9, -24($fp)
 	lw $8, -40($fp)
+	lw $9, -24($fp)
 	mul $10, $8, $9
 	sw $10, -40($fp)
 	lw $8, -28($fp)

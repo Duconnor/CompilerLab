@@ -102,8 +102,8 @@ label5:
 	sw $9, -72($fp)
 	j label7
 label6:
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -76($fp)
@@ -162,8 +162,8 @@ label8:
 	sw $9, -104($fp)
 	j label10
 label9:
-	li $9, 4
 	lw $8, -100($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -108($fp)
@@ -171,8 +171,8 @@ label9:
 	addi $8, $fp, -60
 	add $10, $8, $9
 	sw $10, -104($fp)
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -112($fp)
@@ -193,8 +193,8 @@ label9:
 	add $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -128($fp)
-	li $9, 4
 	lw $8, -128($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -132($fp)
@@ -268,8 +268,8 @@ label11:
 	sw $9, -176($fp)
 	j label13
 label12:
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -180($fp)
@@ -277,8 +277,8 @@ label12:
 	addi $8, $fp, -60
 	add $10, $8, $9
 	sw $10, -176($fp)
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -184($fp)
@@ -291,8 +291,8 @@ label12:
 	lw $9, 0($8)
 	addi $sp, $sp, -4
 	sw $9, -192($fp)
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -196($fp)
@@ -325,8 +325,8 @@ label12:
 	sw, $8, 0($9)
 	sw $8, -216($fp)
 	sw $9, -176($fp)
-	li $9, 4
 	lw $8, -68($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -220($fp)

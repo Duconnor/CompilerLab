@@ -58,8 +58,8 @@ label2:
 	mflo $10
 	addi $sp, $sp, -4
 	sw $10, -24($fp)
-	lw $9, -20($fp)
 	lw $8, -24($fp)
+	lw $9, -20($fp)
 	mul $10, $8, $9
 	sw $10, -24($fp)
 	lw $8, 8($fp)
@@ -136,8 +136,8 @@ label6:
 	sw $9, -64($fp)
 	j label8
 label7:
-	li $9, 4
 	lw $8, -52($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -68($fp)
@@ -157,8 +157,8 @@ label7:
 	li $9, 10
 	addi $sp, $sp, -4
 	sw $9, -80($fp)
-	lw $9, -80($fp)
 	lw $8, -76($fp)
+	lw $9, -80($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -84($fp)
@@ -216,8 +216,8 @@ label9:
 	sw $9, -52($fp)
 	j label11
 label10:
-	li $9, 4
 	lw $8, -60($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -116($fp)
@@ -230,8 +230,8 @@ label10:
 	lw $9, 0($8)
 	addi $sp, $sp, -4
 	sw $9, -124($fp)
-	li $9, 4
 	lw $8, -52($fp)
+	li $9, 4
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -128($fp)
@@ -375,3 +375,37 @@ label18:
 	sw $9, -44($fp)
 	j label20
 label19:
+	li $8, 0
+	lw $9, -20($fp)
+	sub $10, $8, $9
+	addi $sp, $sp, -4
+	sw $10, -48($fp)
+	lw $8, -48($fp)
+	move $a0, $8
+	addi, $sp, $sp, -4
+	sw $ra, 0($sp)
+	jal write
+	lw $ra, 0($sp)
+	addi, $sp, $sp, 4
+label20:
+	li $9, 1
+	addi $sp, $sp, -4
+	sw $9, -52($fp)
+	lw $8, -20($fp)
+	lw $9, -52($fp)
+	add $10, $8, $9
+	addi $sp, $sp, -4
+	sw $10, -56($fp)
+	lw $8, -56($fp)
+	move $9, $8
+	sw $9, -20($fp)
+	j label14
+label16:
+	li $9, 0
+	addi $sp, $sp, -4
+	sw $9, -60($fp)
+	lw $v0, -60($fp)
+	move $sp, $fp
+	lw $fp, 0($sp)
+	addi $sp, $sp, 4
+	jr $ra

@@ -45,8 +45,8 @@ main:
 	move $9, $8
 	addi $sp, $sp, -4
 	sw $9, -24($fp)
-	lw $9, -16($fp)
 	lw $8, -8($fp)
+	lw $9, -16($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -28($fp)
@@ -68,8 +68,8 @@ main:
 	move $9, $8
 	addi $sp, $sp, -4
 	sw $9, -44($fp)
-	lw $9, -16($fp)
 	lw $8, -44($fp)
+	lw $9, -16($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -48($fp)
@@ -94,8 +94,8 @@ main:
 	add $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -60($fp)
-	lw $9, -60($fp)
 	lw $8, -56($fp)
+	lw $9, -60($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -64($fp)
@@ -130,8 +130,8 @@ main:
 	li $9, 12
 	addi $sp, $sp, -4
 	sw $9, -88($fp)
-	lw $9, -88($fp)
 	lw $8, -16($fp)
+	lw $9, -88($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
 	sw $10, -92($fp)
