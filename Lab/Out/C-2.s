@@ -293,7 +293,7 @@ isNarcissistic:
 	addi $sp, $sp, -4
 	sw $10, -16($fp)
 	lw $8, -16($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -20
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -334,10 +334,10 @@ label10:
 	addi $sp, $sp, -4
 	sw $9, -48($fp)
 	lw $8, -48($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -52
 	sw $8, 0($sp)
 	lw $8, -40($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -56
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -369,10 +369,10 @@ label10:
 	move $9, $8
 	sw $9, -40($fp)
 	lw $8, -28($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -76
 	sw $8, 0($sp)
 	lw $8, -60($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -80
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -450,7 +450,7 @@ label15:
 	j label17
 label16:
 	lw $8, -16($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -24
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -472,11 +472,11 @@ label16:
 label18:
 	lw $8, -16($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	li $9, 1
 	addi $sp, $sp, -4
 	sw $9, -32($fp)
@@ -504,11 +504,11 @@ label19:
 label17:
 	lw $8, -8($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	lw $v0, -8($fp)
 	move $sp, $fp
 	lw $fp, 0($sp)

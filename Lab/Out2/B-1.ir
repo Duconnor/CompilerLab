@@ -37,9 +37,9 @@ RETURN t16
 FUNCTION main :
 READ t17
 v5 := t17
-t19 := #7
-t20 := #8
-t21 := #9
+t19 := #1
+t20 := #2
+t21 := #3
 ARG t21
 ARG t20
 ARG t19

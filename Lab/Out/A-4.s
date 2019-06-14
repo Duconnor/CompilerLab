@@ -54,18 +54,18 @@ label2:
 	addi $8, $fp, -20
 	add $10, $8, $9
 	sw $10, -32($fp)
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal read
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	addi $sp, $sp, -4
 	lw $8, -40($fp)
 	move $8, $v0
 	sw $8, -40($fp)
 	lw $8, -40($fp)
 	lw $9, -32($fp)
-	sw, $8, 0($9)
+	sw $8, 0($9)
 	sw $8, -40($fp)
 	sw $9, -32($fp)
 	li $9, 1
@@ -230,7 +230,7 @@ label11:
 	sw $9, -148($fp)
 	lw $8, -148($fp)
 	lw $9, -128($fp)
-	sw, $8, 0($9)
+	sw $8, 0($9)
 	sw $8, -148($fp)
 	sw $9, -128($fp)
 	li $9, 1
@@ -253,7 +253,7 @@ label11:
 	sw $10, -164($fp)
 	lw $8, -120($fp)
 	lw $9, -164($fp)
-	sw, $8, 0($9)
+	sw $8, 0($9)
 	sw $8, -120($fp)
 	sw $9, -164($fp)
 	li $9, 1
@@ -323,11 +323,11 @@ label15:
 	sw $9, -204($fp)
 	lw $8, -204($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	li $9, 1
 	addi $sp, $sp, -4
 	sw $9, -208($fp)

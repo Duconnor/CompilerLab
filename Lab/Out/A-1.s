@@ -84,11 +84,11 @@ main:
 	sw $9, -56($fp)
 	lw $8, -56($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	lw $8, -32($fp)
 	lw $9, -44($fp)
 	add $10, $8, $9
@@ -145,18 +145,18 @@ main:
 	sw $9, -44($fp)
 	lw $8, -56($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	lw $8, -44($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	li $9, 0
 	addi $sp, $sp, -4
 	sw $9, -100($fp)

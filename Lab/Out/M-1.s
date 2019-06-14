@@ -36,25 +36,25 @@ foo:
 label1:
 	lw $8, 28($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	lw $8, 20($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	lw $8, 12($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	j label3
 label2:
 	li $9, 1
@@ -66,22 +66,22 @@ label2:
 	addi $sp, $sp, -4
 	sw $10, -12($fp)
 	lw $8, 28($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -16
 	sw $8, 0($sp)
 	lw $8, 24($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -20
 	sw $8, 0($sp)
 	lw $8, 20($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -24
 	sw $8, 0($sp)
 	lw $8, 16($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -28
 	sw $8, 0($sp)
 	lw $8, 12($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -32
 	sw $8, 0($sp)
 	lw $8, -12($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -36
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -94,11 +94,11 @@ label2:
 	sw $8, -40($fp)
 	lw $8, 16($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	li $9, 1
 	addi $sp, $sp, -4
 	sw $9, -44($fp)
@@ -108,22 +108,22 @@ label2:
 	addi $sp, $sp, -4
 	sw $10, -48($fp)
 	lw $8, 12($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -52
 	sw $8, 0($sp)
 	lw $8, 16($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -56
 	sw $8, 0($sp)
 	lw $8, 20($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -60
 	sw $8, 0($sp)
 	lw $8, 24($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -64
 	sw $8, 0($sp)
 	lw $8, 28($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -68
 	sw $8, 0($sp)
 	lw $8, -48($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -72
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -167,22 +167,22 @@ main:
 	addi $sp, $sp, -4
 	sw $9, -24($fp)
 	lw $8, -24($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -28
 	sw $8, 0($sp)
 	lw $8, -20($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -32
 	sw $8, 0($sp)
 	lw $8, -16($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -36
 	sw $8, 0($sp)
 	lw $8, -12($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -40
 	sw $8, 0($sp)
 	lw $8, -8($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -44
 	sw $8, 0($sp)
 	lw $8, -4($fp)
-	addi $sp, $sp, -4
+	addi $sp, $fp, -48
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)

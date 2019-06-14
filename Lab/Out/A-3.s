@@ -31,11 +31,11 @@ main:
 	move $9, $8
 	addi $sp, $sp, -4
 	sw $9, -8($fp)
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal read
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	addi $sp, $sp, -4
 	lw $8, -12($fp)
 	move $8, $v0
@@ -44,11 +44,11 @@ main:
 	move $9, $8
 	addi $sp, $sp, -4
 	sw $9, -16($fp)
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal read
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	addi $sp, $sp, -4
 	lw $8, -20($fp)
 	move $8, $v0
@@ -161,11 +161,11 @@ label9:
 label6:
 	lw $8, -44($fp)
 	move $a0, $8
-	addi, $sp, $sp, -4
+	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal write
 	lw $ra, 0($sp)
-	addi, $sp, $sp, 4
+	addi $sp, $sp, 4
 	li $9, 0
 	addi $sp, $sp, -4
 	sw $9, -68($fp)

@@ -364,7 +364,7 @@ void mPrintPASSIGN(InterCode ic, FILE *fp) {
 	loadVar(nameRight, 4, 8, fp);
 	loadVar(nameLeft, 4, 9, fp);
 	char code[256];
-	sprintf(code, "\tsw, $8, 0($9)\n");
+	sprintf(code, "\tsw $8, 0($9)\n");
 	fputs(code, fp);
 	saveVar(nameRight, 4, 8, fp);
 	saveVar(nameLeft, 4, 9, fp);
@@ -470,11 +470,11 @@ void mPrintARGV(InterCode ic, FILE* fp) {
 	loadVar(varName, 4, 8, fp);
 	char line[100];
 	memset(line, 0, sizeof(line));
-	sprintf(line, "\taddi $sp, $sp, -4\n");
+	offset -= 4;
+	sprintf(line, "\taddi $sp, $fp, %d\n", offset);
 	fputs(line, fp);
 	sprintf(line, "\tsw $8, 0($sp)\n");
 	fputs(line, fp);
-	offset -= 4;
 }
 
 
@@ -505,7 +505,7 @@ void mPrintREAD(InterCode ic, FILE* fp) {
 	char *varName = getVarName(ic->u.sinop.op);
 	char line[100];
 	memset(line, 0, sizeof(line));
-	sprintf(line, "\taddi, $sp, $sp, -4\n");
+	sprintf(line, "\taddi $sp, $sp, -4\n");
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
@@ -514,7 +514,7 @@ void mPrintREAD(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
-	sprintf(line, "\taddi, $sp, $sp, 4\n");
+	sprintf(line, "\taddi $sp, $sp, 4\n");
 	fputs(line, fp);
     offset += 4;
 	loadVar(varName, 4, 8, fp);
@@ -531,7 +531,7 @@ void mPrintWRITE(InterCode ic, FILE* fp) {
 	sprintf(line, "\tmove $a0, $8\n");
 	fputs(line, fp);
 	/* Store, call and retrieve */
-	sprintf(line, "\taddi, $sp, $sp, -4\n");
+	sprintf(line, "\taddi $sp, $sp, -4\n");
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
@@ -540,7 +540,7 @@ void mPrintWRITE(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
-	sprintf(line, "\taddi, $sp, $sp, 4\n");
+	sprintf(line, "\taddi $sp, $sp, 4\n");
 	fputs(line, fp);
     offset += 4;
 }
