@@ -452,7 +452,6 @@ void mPrintRETURN(InterCode ic, FILE* fp) {
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, 4\n");
     fputs(line, fp);
-    offset += 4;
     sprintf(line, "\tjr $ra\n");
     fputs(line, fp);
 }

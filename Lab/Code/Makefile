@@ -34,18 +34,18 @@ syntax-c: $(YFILE)
 # 定义的一些伪目标
 .PHONY: clean test
 test:
-	./parser ../Test/A_1.cmm ../Out/A-1.s ../Out2/A-1.ir
-	./parser ../Test/A_2.cmm ../Out/A-2.s ../Out2/A-2.ir
-	./parser ../Test/A_3.cmm ../Out/A-3.s ../Out2/A-3.ir
-	./parser ../Test/A_4.cmm ../Out/A-4.s ../Out2/A-4.ir
-	./parser ../Test/A_5.cmm ../Out/A-5.s ../Out2/A-5.ir
-	./parser ../Test/B_1.cmm ../Out/B-1.s ../Out2/B-1.ir
-	./parser ../Test/B_2.cmm ../Out/B-2.s ../Out2/B-2.ir
-	./parser ../Test/B_3.cmm ../Out/B-3.s ../Out2/B-3.ir
-	./parser ../Test/C_1.cmm ../Out/C-1.s ../Out2/C-1.ir
-	./parser ../Test/C_2.cmm ../Out/C-2.s ../Out2/C-2.ir
-	./parser ../Test/D_1.cmm ../Out/D-1.s ../Out2/D-1.ir
-	./parser ../Test/M_1.cmm ../Out/M-1.s ../Out2/M-1.ir
+	./parser ../Test/A_1.cmm ../Out/A-1.s
+	./parser ../Test/A_2.cmm ../Out/A-2.s
+	./parser ../Test/A_3.cmm ../Out/A-3.s
+	./parser ../Test/A_4.cmm ../Out/A-4.s 
+	./parser ../Test/A_5.cmm ../Out/A-5.s 
+	./parser ../Test/B_1.cmm ../Out/B-1.s 
+	./parser ../Test/B_2.cmm ../Out/B-2.s 
+	./parser ../Test/B_3.cmm ../Out/B-3.s 
+	./parser ../Test/C_1.cmm ../Out/C-1.s 
+	./parser ../Test/C_2.cmm ../Out/C-2.s 
+	./parser ../Test/D_1.cmm ../Out/D-1.s 
+	./parser ../Test/M_1.cmm ../Out/M-1.s 
 	
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
