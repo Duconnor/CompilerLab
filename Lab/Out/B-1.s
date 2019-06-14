@@ -26,28 +26,28 @@ hanoi:
 	move $fp, $sp
 	li $9, 1
 	addi $sp, $sp, -4
-	sw $9, -8($fp)
+	sw $9, -4($fp)
 	lw $8, 8($fp)
-	lw $9, -8($fp)
+	lw $9, -4($fp)
 	beq $8, $9, label1
 	sw $8, 8($fp)
-	sw $9, -8($fp)
+	sw $9, -4($fp)
 	j label2
 label1:
 	li $9, 1000
 	addi $sp, $sp, -4
-	sw $9, -12($fp)
+	sw $9, -8($fp)
 	lw $8, 12($fp)
-	lw $9, -12($fp)
+	lw $9, -8($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -16($fp)
-	lw $8, -16($fp)
+	sw $10, -12($fp)
+	lw $8, -12($fp)
 	lw $9, 20($fp)
 	add $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -20($fp)
-	lw $8, -20($fp)
+	sw $10, -16($fp)
+	lw $8, -16($fp)
 	move $a0, $8
 	addi, $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -58,12 +58,12 @@ label1:
 label2:
 	li $9, 1
 	addi $sp, $sp, -4
-	sw $9, -24($fp)
+	sw $9, -20($fp)
 	lw $8, 8($fp)
-	lw $9, -24($fp)
+	lw $9, -20($fp)
 	sub $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -28($fp)
+	sw $10, -24($fp)
 	lw $8, 16($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
@@ -73,7 +73,7 @@ label2:
 	lw $8, 12($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
-	lw $8, -28($fp)
+	lw $8, -24($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
@@ -82,23 +82,23 @@ label2:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	addi $sp, $sp, -4
-	lw $8, -48($fp)
+	lw $8, -44($fp)
 	move $8, $v0
-	sw $8, -48($fp)
+	sw $8, -44($fp)
 	li $9, 1000
 	addi $sp, $sp, -4
-	sw $9, -52($fp)
+	sw $9, -48($fp)
 	lw $8, 12($fp)
-	lw $9, -52($fp)
+	lw $9, -48($fp)
 	mul $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -56($fp)
-	lw $8, -56($fp)
+	sw $10, -52($fp)
+	lw $8, -52($fp)
 	lw $9, 20($fp)
 	add $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -60($fp)
-	lw $8, -60($fp)
+	sw $10, -56($fp)
+	lw $8, -56($fp)
 	move $a0, $8
 	addi, $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -107,12 +107,12 @@ label2:
 	addi, $sp, $sp, 4
 	li $9, 1
 	addi $sp, $sp, -4
-	sw $9, -64($fp)
+	sw $9, -60($fp)
 	lw $8, 8($fp)
-	lw $9, -64($fp)
+	lw $9, -60($fp)
 	sub $10, $8, $9
 	addi $sp, $sp, -4
-	sw $10, -68($fp)
+	sw $10, -64($fp)
 	lw $8, 20($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
@@ -122,7 +122,7 @@ label2:
 	lw $8, 16($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
-	lw $8, -68($fp)
+	lw $8, -64($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
 	addi $sp, $sp, -4
@@ -131,14 +131,14 @@ label2:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	addi $sp, $sp, -4
-	lw $8, -88($fp)
+	lw $8, -84($fp)
 	move $8, $v0
-	sw $8, -88($fp)
+	sw $8, -84($fp)
 label3:
 	li $9, 0
 	addi $sp, $sp, -4
-	sw $9, -92($fp)
-	lw $v0, -92($fp)
+	sw $9, -88($fp)
+	lw $v0, -88($fp)
 	move $sp, $fp
 	lw $fp, 0($sp)
 	addi $sp, $sp, 4
@@ -154,25 +154,22 @@ main:
 	lw $ra, 0($sp)
 	addi, $sp, $sp, 4
 	addi $sp, $sp, -4
-	lw $8, -8($fp)
+	lw $8, -4($fp)
 	move $8, $v0
-	sw $8, -8($fp)
-	lw $8, -8($fp)
+	sw $8, -4($fp)
+	lw $8, -4($fp)
 	move $9, $8
 	addi $sp, $sp, -4
-	sw $9, -12($fp)
+	sw $9, -8($fp)
 	li $9, 7
 	addi $sp, $sp, -4
-	sw $9, -16($fp)
+	sw $9, -12($fp)
 	li $9, 8
 	addi $sp, $sp, -4
-	sw $9, -20($fp)
+	sw $9, -16($fp)
 	li $9, 9
 	addi $sp, $sp, -4
-	sw $9, -24($fp)
-	lw $8, -24($fp)
-	addi $sp, $sp, -4
-	sw $8, 0($sp)
+	sw $9, -20($fp)
 	lw $8, -20($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
@@ -182,19 +179,22 @@ main:
 	lw $8, -12($fp)
 	addi $sp, $sp, -4
 	sw $8, 0($sp)
+	lw $8, -8($fp)
+	addi $sp, $sp, -4
+	sw $8, 0($sp)
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal hanoi
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	addi $sp, $sp, -4
-	lw $8, -44($fp)
+	lw $8, -40($fp)
 	move $8, $v0
-	sw $8, -44($fp)
+	sw $8, -40($fp)
 	li $9, 0
 	addi $sp, $sp, -4
-	sw $9, -48($fp)
-	lw $v0, -48($fp)
+	sw $9, -44($fp)
+	lw $v0, -44($fp)
 	move $sp, $fp
 	lw $fp, 0($sp)
 	addi $sp, $sp, 4

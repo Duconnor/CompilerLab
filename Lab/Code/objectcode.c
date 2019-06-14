@@ -17,19 +17,19 @@ static void loadVar(char *varName, int varSize, int regNum, FILE *fp) {
 	/* This function load a var from memory into a register */
 	/* 'regNum' is the number of the register you want to store */
 	mVar v = getMVar(varName);
-	int offset = 0;
+	int tempOffset = 0;
 	char code[256];
     memset(code, 0, sizeof(code));
 	if (v == NULL) {
 		/* Allocate space for this var on the stack */
-		offset = mAlloc(varName, varSize);
+		tempOffset = mAlloc(varName, varSize);
 		/* Decrement the register $sp */
 		sprintf(code, "\taddi $sp, $sp, -%d\n", varSize);
 		fputs(code, fp);
 	} else {
-		offset = v->offset;
+		tempOffset = v->offset;
 	}
-	sprintf(code, "\tlw $%d, %d($fp)\n", regNum, offset);
+	sprintf(code, "\tlw $%d, %d($fp)\n", regNum, tempOffset);
 	fputs(code, fp);
 }
 
@@ -38,16 +38,16 @@ static void saveVar(char *varName, int varSize, int regNum, FILE *fp) {
     char code[256];
     memset(code, 0, sizeof(code));
 	mVar v = getMVar(varName);
-	int offset = 0;
+	int tempOffset = 0;
 	if (v == NULL) {
 		/* Allocate space for this var on the stack */
-		offset = mAlloc(varName, varSize);
+		tempOffset = mAlloc(varName, varSize);
 		sprintf(code, "\taddi $sp, $sp, -%d\n", varSize);
 		fputs(code, fp);
 	} else {
-		offset = v->offset;
+		tempOffset = v->offset;
 	}
-	sprintf(code, "\tsw $%d, %d($fp)\n", regNum, offset);
+	sprintf(code, "\tsw $%d, %d($fp)\n", regNum, tempOffset);
 	fputs(code, fp);
 }
 
@@ -421,7 +421,6 @@ void mPrintFUNCTION(InterCode ic, FILE* fp) {
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, -4\n");
     fputs(line, fp);
-    offset -= 4;    
     sprintf(line, "\tsw $fp, 0($sp)\n");
     fputs(line, fp);
     sprintf(line, "\tmove $fp, $sp\n");
