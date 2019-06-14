@@ -44,6 +44,9 @@ test:
 	./parser ../Test/B_3.cmm ../Out/B-3.s ../Out2/B-3.ir
 	./parser ../Test/C_1.cmm ../Out/C-1.s ../Out2/C-1.ir
 	./parser ../Test/C_2.cmm ../Out/C-2.s ../Out2/C-2.ir
+	./parser ../Test/D_1.cmm ../Out/D-1.s ../Out2/D-1.ir
+	./parser ../Test/M_1.cmm ../Out/M-1.s ../Out2/M-1.ir
+	
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

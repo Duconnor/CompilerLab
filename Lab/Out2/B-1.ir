@@ -7,7 +7,7 @@ t2 := #1
 IF v1 == t2 GOTO label1
 GOTO label2
 LABEL label1 :
-t5 := #1000000000
+t5 := #1000
 t4 := v2 * t5
 t3 := t4 + v4
 WRITE t3
@@ -20,7 +20,7 @@ ARG v4
 ARG v2
 ARG t7
 t6 := CALL hanoi
-t12 := #1000000000
+t12 := #1000
 t11 := v2 * t12
 t10 := t11 + v4
 WRITE t10
@@ -37,9 +37,9 @@ RETURN t16
 FUNCTION main :
 READ t17
 v5 := t17
-t19 := #1
-t20 := #2
-t21 := #3
+t19 := #7
+t20 := #8
+t21 := #9
 ARG t21
 ARG t20
 ARG t19

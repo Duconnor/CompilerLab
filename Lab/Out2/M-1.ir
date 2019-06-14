@@ -1,0 +1,54 @@
+FUNCTION foo :
+PARAM v1
+PARAM v2
+PARAM v3
+PARAM v4
+PARAM v5
+PARAM v6
+t2 := #1
+IF v1 == t2 GOTO label1
+GOTO label2
+LABEL label1 :
+WRITE v6
+WRITE v4
+WRITE v2
+GOTO label3
+LABEL label2 :
+t7 := #1
+t6 := v1 - t7
+ARG v6
+ARG v5
+ARG v4
+ARG v3
+ARG v2
+ARG t6
+t5 := CALL foo
+WRITE v3
+t11 := #1
+t10 := v1 - t11
+ARG v2
+ARG v3
+ARG v4
+ARG v5
+ARG v6
+ARG t10
+t9 := CALL foo
+LABEL label3 :
+t12 := #0
+RETURN t12
+FUNCTION main :
+t14 := #3
+t15 := #1
+t16 := #2
+t17 := #3
+t18 := #4
+t19 := #5
+ARG t19
+ARG t18
+ARG t17
+ARG t16
+ARG t15
+ARG t14
+t13 := CALL foo
+t20 := #0
+RETURN t20

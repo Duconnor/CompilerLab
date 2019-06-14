@@ -1,0 +1,18 @@
+int foo(int count, int a, int b, int c, int d, int e) {
+    if(count == 1) {
+        write(e);
+        write(c);
+        write(a);
+    }
+    else {
+        foo(count-1, a, b, c, d, e);
+        write(b);
+        foo(count-1, e, d, c, b, a);
+    }
+    return 0;
+}
+
+int main() {
+    foo(3, 1, 2, 3, 4, 5);
+    return 0;
+}

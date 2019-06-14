@@ -421,6 +421,7 @@ void mPrintFUNCTION(InterCode ic, FILE* fp) {
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, -4\n");
     fputs(line, fp);
+    offset -= 4;    
     sprintf(line, "\tsw $fp, 0($sp)\n");
     fputs(line, fp);
     sprintf(line, "\tmove $fp, $sp\n");
@@ -452,6 +453,7 @@ void mPrintRETURN(InterCode ic, FILE* fp) {
     fputs(line, fp);
     sprintf(line, "\taddi $sp, $sp, 4\n");
     fputs(line, fp);
+    offset += 4;
     sprintf(line, "\tjr $ra\n");
     fputs(line, fp);
 }
@@ -486,12 +488,14 @@ void mPrintCALL(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
+    offset -= 4;
 	sprintf(line, "\tjal %s\n", funcName);
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
 	sprintf(line, "\taddi $sp, $sp, 4\n");
 	fputs(line, fp);
+    offset += 4;
 	loadVar(varName, 4, 8, fp);
 	sprintf(line, "\tmove $8, $v0\n");
 	fputs(line, fp);
@@ -506,12 +510,14 @@ void mPrintREAD(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
+    offset -= 4;
 	sprintf(line, "\tjal read\n");
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
 	sprintf(line, "\taddi, $sp, $sp, 4\n");
 	fputs(line, fp);
+    offset += 4;
 	loadVar(varName, 4, 8, fp);
 	sprintf(line, "\tmove $8, $v0\n");
 	fputs(line, fp);
@@ -530,12 +536,14 @@ void mPrintWRITE(InterCode ic, FILE* fp) {
 	fputs(line, fp);
 	sprintf(line, "\tsw $ra, 0($sp)\n");
 	fputs(line, fp);
+    offset -= 4;
 	sprintf(line, "\tjal write\n");
 	fputs(line, fp);
 	sprintf(line, "\tlw $ra, 0($sp)\n");
 	fputs(line, fp);
 	sprintf(line, "\taddi, $sp, $sp, 4\n");
 	fputs(line, fp);
+    offset += 4;
 }
 
 void mPrintADDR(InterCode ic, FILE *fp) {
